@@ -60,6 +60,7 @@ public:
 	int _quadrant; // ºÐ¸é
 
 	bool _clicked = false;
+	bool _merged = false;;
 
 	Rect_Status _rs = base;
 	

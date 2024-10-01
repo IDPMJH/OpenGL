@@ -83,7 +83,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			float b = Random_Number<float>(-90, 90) / 100.f;
 			vPos<float> vPos_temp(a,b);
 			Rect rc_temp(vPos_temp, 0.1f, 0.1f);
-			v_rc.push_back(rc_temp);
+			v_rc.emplace_back(rc_temp);
 		}
 
 	}
@@ -134,24 +134,69 @@ GLvoid Mouse(int button, int state, int x, int y)
 	switch (button)
 	{
 	case GLUT_LEFT_BUTTON: // 사각형 내부 - 색상 랜덤, 사각형 외부 - 배경색 랜덤
+	{
 		if (state == GLUT_DOWN)
 		{
 			for (Rect& rc : v_rc)
 			{
-				rc.Left_Click(xpos,ypos);
+				rc.Left_Click(xpos, ypos);
 			}
 		}
 		else if (state == GLUT_UP)
 		{
-			Rect* temp = nullptr;
 			for (auto rc = v_rc.begin(); rc != v_rc.end(); ++rc)
 			{
 				if (rc->_clicked == true)
-					temp = &*rc;
-				rc->_clicked = false;
+					rc->Merge_Check(v_rc);
 			}
-			temp->Merge_Check(v_rc);
+			float min_width = 1.f, min_height = 1.f;
+			float max_width = 0.f, max_height = 0.f;
+			float merge_count = 0.f;
+			vPos<float> center(0.f, 0.f);
+			for (auto it = v_rc.begin(); it != v_rc.end();)
+			{
+				if (it->_merged == true)
+				{
+					++merge_count;
+					if (min_width > it->_width)
+						min_width = it->_width;
+					if (min_height > it->_height)
+						min_height = it->_height;
+					if (max_width < it->_width)
+						max_width = it->_width;
+					if (max_height < it->_height)
+						max_height = it->_height;
+					center = center + (it->_center);
+					it = v_rc.erase(it);
+				}
+				else
+					++it;
+			}
+			if(merge_count != 0)
+			{
+				center._x = center._x / merge_count;
+				center._y = center._y / merge_count;
+				{
+				}
+
+				Rect temp(center, min_width + max_width, min_height + max_height);
+				v_rc.emplace_back(temp);
+			}
+			for (auto ite = v_rc.begin(); ite != v_rc.end();)
+			{
+				if (ite->_merged == true)
+				{
+					std::cout << "Erasing: " << ite->_width << " x " << ite->_height << std::endl;
+					ite = v_rc.erase(ite);
+				}
+				else
+				{
+					++ite;
+				}
+			}
+			std::cout << "v_rc size after erase: " << v_rc.size() << std::endl;
 		}
+	}
 		break;
 	default:
 		break;

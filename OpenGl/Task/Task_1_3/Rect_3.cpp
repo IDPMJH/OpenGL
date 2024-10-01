@@ -4,6 +4,7 @@
 #include <gl/glew.h> //--- 필요한 헤더파일 include
 #include<gl/freeglut.h>
 #include <gl/freeglut_ext.h>
+#include <assert.h>
 
 
 Rect::Rect()
@@ -112,29 +113,38 @@ void Rect::Update(vPos<float> pos)
 void Rect::Merge_Check(vector<Rect>& vc)
 {
 	if (this == nullptr)
-		return;
+		assert(this);
+	//vector<Rect>::iterator r_i;
 	for (auto i = vc.begin();  i !=vc.end(); ++i)
 	{
-		// 자기 자신인 경우
+		
 		if (&*i == this)
 		{
+			// 자기 자신인 경우
 			continue;
 		}
 		vPos<float> length = i->_center - this->_center;
 
 		float width = (i->_width > this->_width) ? i->_width / 2 : this->_width / 2;
-		float height = (i->_height > this->_height) ? i->_height / 2 : i->_height / 2;
+		float height = (i->_height > this->_height) ? i->_height / 2 : this->_height / 2;
 		vPos<float> center = (i->_height > this->_height) ? i->_center : this->_center;
 		if (abs(length._x) <= width && abs(length._y) <= height)
 		{
+			this->_merged = true;
+			i->_merged = true;
 			// 합쳐질 상황
-			Rect New_Rc(center, i->_width + this->_width, i->_height + this->_height);
+			
+
+			/*Rect New_Rc(center, i->_width + this->_width, i->_height + this->_height);
+			New_Rc._clicked = true;
 			*this = New_Rc;
 			vc.erase(i);
-			break;
+			return vc.begin();*/
 			//return it;
 		}
 	}
+	/*for (auto& i : vc)
+		i._clicked = false;*/
 }
 
 Rect_terminous Rect::Check_terminous(float mouse_x, float mouse_y)
