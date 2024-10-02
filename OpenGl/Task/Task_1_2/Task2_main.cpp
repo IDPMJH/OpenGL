@@ -14,10 +14,10 @@ static int window_y = 600;
 using namespace std;
 
 GLvoid drawScene(GLvoid);
-GLvoid Reshape
-(int w, int h);
+GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
+GLvoid Win_Resize(int w, int h);
 void UserTimerFunc(int value);
 
 
@@ -43,6 +43,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutDisplayFunc(drawScene); //--- 출력 콜백함수의 지정
 	glutReshapeFunc(Reshape); //--- 다시 그리기 콜백함수 지정
 	//glutKeyboardFunc(Keyboard); //--- 키보드 입력 콜백함수 지정
+	glutReshapeFunc(Win_Resize);
 	glutMouseFunc(Mouse); // 마우스 입력 콜백함수 지정
 	glClearColor(1.f, 1.f, 1.f, 1.f);
 	glutMainLoop(); //--- 이벤트 처리 시작
@@ -83,6 +84,12 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
 	glViewport(0, 0, w, h);
+}
+
+GLvoid Win_Resize(int w, int h)
+{
+	window_x = w;
+	window_y = h;
 }
 
 static bool on_timer = false;

@@ -8,13 +8,17 @@
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
+GLvoid Win_Resize(int w, int h);
+
+int window_x = 800;
+int window_y = 600;
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
 {
 	glutInit(&argc, argv); // glut 초기화
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
 	glutInitWindowPosition(100,100); // 윈도우의 위치 지정
-	glutInitWindowSize(250, 250); // 윈도우의 크기 지정
+	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
 	int i = glutCreateWindow("Example1"); // 윈도우 생성 (윈도우 이름)
 	
 	// 윈도우 파괴
@@ -45,7 +49,9 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 		std::cout << "GLEW Initialized\n";
 	glutDisplayFunc(drawScene); // 출력 콜백 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
-
+	glutReshapeFunc (Win_Resize);
+// 윈도우 크기가 변경될 때 취할 동작 지정
+// w : 윈도우의 새로운 폭, h : 윈도우의 새로운 높이
 	glutMainLoop(); // 이벤트 처리 시작
 	/*지금까지 생성한 윈도우들과 여기에 그린 그림들을 화면에 출력한다.
 	또한, 이벤트 처리가 시작되고 디스플레이 콜백으로 등록된 함수가 호출된다.
@@ -87,6 +93,12 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수 {
 {
 	glViewport(0, 0, w, h);
+}
+
+GLvoid Win_Resize(int w, int h)
+{
+	window_x = w;
+	window_y = h;
 }
 
 // 콜백함수들
