@@ -195,7 +195,12 @@ GLvoid Mouse(int button, int state, int x, int y)
 				}
 			}
 			std::cout << "v_rc size after erase: " << v_rc.size() << std::endl;
+			for (auto& a : v_rc)
+		{
+			a._clicked = false;
 		}
+		}
+		
 	}
 		break;
 	default:

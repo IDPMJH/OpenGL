@@ -75,8 +75,10 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 }
 
 static bool on_timer = true;
+static bool can_click = true;
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+	can_click = false;	// 클릭 불가능하게 설정
 	switch (key)
 	{
 	case '1' :	// changing_diagonal
@@ -154,7 +156,10 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'r' : // 사각형 삭제
 		v_rc.clear();
+		can_click = true;	// 다시 클릭 가능
+		break;
 	default:
+		can_click = true;
 		break;
 	}
 
@@ -185,7 +190,7 @@ GLvoid Mouse(int button, int state, int x, int y)
 	{
 		if (state == GLUT_DOWN)
 		{
-			if (v_rc.size() < 5)
+			if (v_rc.size() < 5 && can_click == true)
 			{
 				// 사각형 생성
 				
