@@ -25,7 +25,7 @@ int main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); //--- 디스플레이 모드 설정
 	glutInitWindowPosition(0, 0); //--- 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); //--- 윈도우의 크기 지정
-	glutCreateWindow("윤재형 바보"); //--- 윈도우 생성
+	glutCreateWindow("Task_5"); //--- 윈도우 생성
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK
@@ -84,10 +84,12 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 }
 
 static bool on_timer = false;
+static bool on_click = false;
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	if(key == 'r')
 	{
+		on_click = false;
 		v_rc.clear();
 		int count = Random_Number<int>(20, 40);
 
@@ -110,6 +112,8 @@ static float pre_ypos = 0;
 
 GLvoid Mouse_Down_Move(int x, int y)
 {
+	if (on_click == false)
+		return;
 	// 마우스 좌표 변환
 	float cur_xpos = x;
 	float cur_ypos = y;
@@ -227,6 +231,7 @@ GLvoid Mouse(int button, int state, int x, int y)
 	{
 		if (state == GLUT_DOWN)
 		{
+			on_click = true;
 			Rect eraser(eraser_pos, 0.2f, 0.2f);
 			eraser._clicked = true;
 			eraser._r = 0.f;
