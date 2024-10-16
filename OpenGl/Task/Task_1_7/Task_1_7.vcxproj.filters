@@ -13,10 +13,69 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Polygons">
+      <UniqueIdentifier>{643c1c9f-f238-4f4c-99ce-004f2b449566}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Polygons\Dot">
+      <UniqueIdentifier>{6e0f2ef0-4ed0-4922-b43e-52487ad80f1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Polygons\Line">
+      <UniqueIdentifier>{1c7bfecc-87fd-485d-a723-d1252666ea59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Polygons\Triangle">
+      <UniqueIdentifier>{f264a64d-5bde-4cc8-85a5-74aa2b46fe60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Polygons\Rect">
+      <UniqueIdentifier>{6deefcb1-24d4-4cca-aa58-912c7c3b3c23}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Polygon.cpp">
+      <Filter>Polygons</Filter>
+    </ClCompile>
+    <ClCompile Include="Dot.cpp">
+      <Filter>Polygons\Dot</Filter>
+    </ClCompile>
+    <ClCompile Include="Line.cpp">
+      <Filter>Polygons\Line</Filter>
+    </ClCompile>
+    <ClCompile Include="Triangle.cpp">
+      <Filter>Polygons\Triangle</Filter>
+    </ClCompile>
+    <ClCompile Include="Rect.cpp">
+      <Filter>Polygons\Rect</Filter>
+    </ClCompile>
+    <ClCompile Include="main_8.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="main_9.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="component_7.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon.h">
+      <Filter>Polygons</Filter>
+    </ClInclude>
+    <ClInclude Include="Dot.h">
+      <Filter>Polygons\Dot</Filter>
+    </ClInclude>
+    <ClInclude Include="Rect.h">
+      <Filter>Polygons\Rect</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.h">
+      <Filter>Polygons\Line</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangle.h">
+      <Filter>Polygons\Triangle</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

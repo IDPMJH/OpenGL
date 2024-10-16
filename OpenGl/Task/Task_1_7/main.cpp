@@ -1,19 +1,27 @@
-﻿#include <iostream>
-#include <gl/glew.h>
-#include <gl/freeglut.h>
-#include <gl/freeglut_ext.h>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include "global.h"
+
+#include "Polygon.h"
+#include "Triangle.h"
+#include "Dot.h"
+#include "Line.h"
+#include "Rect.h"
+#include "component_7.h"
 
 
 
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
-GLvoid Win_Resize(int w, int h);
+GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid Mouse(int button, int state, int x, int y);
+
 
 void make_shaderProgram();
 void InitBuffer();
 void make_vertexShaders();
 void make_fragmentShaders();
+
 
 int window_x = 800;
 int window_y = 600;
@@ -22,12 +30,7 @@ GLint width, height;
 GLuint shaderProgramID; //--- 세이더 프로그램 이름
 GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
-
-const GLfloat triShape[3][3] = { //--- 삼각형 위치 값
-{ -0.5, -0.5, 0.0 }, { 0.5, -0.5, 0.0 }, { 0.0, 0.5, 0.0} };
-const GLfloat colors[3][3] = { //--- 삼각형 꼭지점 색상
-{ 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } };
-GLuint vao, vbo[2];
+GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
 {
@@ -65,8 +68,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 		std::cout << "GLEW Initialized\n";
 	glutDisplayFunc(drawScene); // 출력 콜백 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
-	glutReshapeFunc(Win_Resize);
+	glutKeyboardFunc(Keyboard);
+	glutMouseFunc(Mouse);
 
+	//Triangle t1;
 
 	make_shaderProgram();
 	InitBuffer();
@@ -84,9 +89,14 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	//void glutLeaveMainLoop(); - 이벤트 프로세싱(프로그램 종료)
 }
 
+
+
+GLuint vao[10], vbo[4];
+vector<class::Polygon*> polygons;
+
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 {
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f); // 바탕색을 ‘blue’로 지정
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // 바탕색을 ‘blue’로 지정
 	/*r, g, b: red, green, blue 값
 	a : alpha 값(1.0값으로 고정)*/
 	glClear(GL_COLOR_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
@@ -102,15 +112,66 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
+	glLineWidth(2);
+	glPointSize(5);
 	glUseProgram(shaderProgramID);
+
+	for (size_t i = 0; i < polygons.size(); i++)
+	{
+		glBindVertexArray(vao[i]);
+		polygons[i]->Draw_Polygon();
+	}
 	//--- 사용할 VAO 불러오기
-	glBindVertexArray(vao);
-	//--- 삼각형 그리기
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glBindVertexArray(vao[1]);
+	//// 그리기
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
+	//void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+	/*바인드 한 배열 데이터로부터 프리미티브 렌더링 하기
+	 mode : 렌더링 할 프리미티브의 종류
+		 -점:GL_POINTS,
+		 -선:
+		 GL_LINE_STRIP,		1 - 2 - 3 - 4 인덱스 전부 연결
+		 GL_LINE_LOOP,		[1] - 2 - 3 - 4 - [1] 끝이 이어지게 루프로 연결
+		 GL_LINES			1 - 2번인덱스, 3 - 4번인덱스 등등 따로 연결
+		 -삼각형:
+		 GL_TRIANGLE_STRIP	이어지는 삼각형 ex)삼각형 두 개로 만드는 사각형 등
+		 GL_TRIANGLE_FAN	부채꼴로 이어지는 삼각형
+		 GL_TRIANGLES 등		기본 삼각형
+	 first : 배열에서 도형의 시작 인덱스
+	 count : 렌더링 할 인덱스 개수
+	 프리미티브(primitive) : 오픈지엘 렌더링의 기본 단위로 이용 가능한 가장 단순한 요소  점, 선, 삼각형*/
+
+	/*	GL에서 그리기
+		void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
+	 배열 데이터로부터 프리미티브 렌더링 하기, 배열 데이터의 인덱스를 사용
+		mode : 렌더링 할 프리미티브의 종류
+		GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES 등
+		count : 렌더링할 요소의 개수
+		type : indices 값의 타입
+		GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, 또는 GL_UNSIGNED_INT
+		indices : 바인딩 되는 버퍼의 데이터 저장소에 있는 배열의 첫 번째 인덱스 오프셋*/
+	
+	//기본 속성 바꾸기
+	/*점 크기 설정
+		void glPointSize(GLfloat size);
+		size : 점의 크기(초기값 : 1)
+
+	선의 굵기 조정
+		void glLineWidth(GLfloat width);
+		width : 선의 굵기(초기값 : 1)
+
+	폴리곤 모드 설정
+		void glPolygonMode(GLenum face, GLenum mode);
+		face : 모드를 설정할 면(GL_FRONT_AND_BACK)
+		mode : 모드
+		GL_POINT, GL_LINE, GL_FILL*/
+
 	glutSwapBuffers(); //--- 화면에 출력하기
 
 
-	glutSwapBuffers(); // 화면에 출력하기 - 더블버퍼이므로 glFlush대신 실행
+	//glutSwapBuffers(); // 화면에 출력하기 - 더블버퍼이므로 glFlush대신 실행
 	/*그리기를 실행하는 동시에 화면에 나타나지 않는 버퍼(off screen)에 렌더링을 할 수 있다.
 	스왑(swap) 명령으로 버퍼에 렌더링한 그림을 스크린 상에 즉시 나타낼 수 있다.
 
@@ -128,107 +189,296 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수 {
 {
 	glViewport(0, 0, w, h);
-}
-
-GLvoid Win_Resize(int w, int h)
-{
 	window_x = w;
 	window_y = h;
 }
 
-// 콜백함수들
-// 1. void gludDisplayFunc (void(*func)(void));
-// 현재 윈도우의 출력 콜백 함수 설정
-// 윈도우의 내용을 다시 출력해야 할 필요가 있을 때마다 이 함수로 등록한 콜백 함수를 호출한다. 
-// 장면을 다시 그리는데 필요한 루틴들은 모두 이 함수 안에 넣어둔다.
-//
-// 2. void glutReshapeFunc (void(*func)(int w, int h));
-// 윈도우 크기가 변경될 때 취할 동작 지정
-// w : 윈도우의 새로운 폭, h : 윈도우의 새로운 높이
-//
-// 3.  void glutIdelFunc (void(*func))
-// 이벤트가 없을 때 호출되는 함수
-// 다른 이벤트가 없을 떄 실행
-// 애니메이션 효과를 줄 수 있다.
-// 
-// 4. void glutKeyBoardFunc (void(*func)(unsigned char key, int x, int y));
-// 키보드와 인자로 지정한 루틴을 연결하여 키를 누를 떄 호출되도록 설정한다.
-// 키보드 입력이 일어날떄마다 ASCII코드 값이 설정된다.
-// 
-// 
-// 5. ASCII가 아닌 특수 키인 경우
-// void glut SpecialFunc (void(*func)(int key, intx, int y));
-// Key: GLUT_KEY_F1 ~ GLUT_KEY_F12,
-// GLUT_KEY_LEFT, GLUT_KEY_RIGHT, GLUT_KEY_UP, GLUT_KEY_DOWN,
-// GLUT_KEY_HOME, GLUT_KEY_END, GLUT_KEY_INSERT,
-// GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN
-// 
-// 6. int glutGetModifiers (void);
-// GLUT_ACTIVE_CTRL,GLUT_ACTIVE_ALT, GLUT_ACTIVE_SHIFT 값을 리턴
-// 
-// 7. 키보드를 떼었을 때 호출되는 콜백 함수 설정
-// void glutKeyboardUpFunc ( void (*func) ( unsigned char key, int x, int y ) );
-// 
-// 8. 마우스 입력
-// void glutMouseFunc(void(&func)(int button, int state, int x, int y));
-// 마우스 버튼과 인자로 지정한 루틴을 연결하여 호출되도록 한다.
-// button (버튼 파라미터): GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, GLUT_RIGHT_BUTTON
-// state(상태 파라미터) : GLUT_UP, GLUT_DOWN
-// x, y : 윈도우에서 마우스의 위치
-// 
-// 9. 마우스 이동 입력
-// void glutMotionFunc(void(*func)(int x, int y));
-// 마우스 버튼을 누른 채 마우스를 움직일 때 호출될 콜백 함수를 등록한다.
-// void glutPassiveMotionFunc(void(*func)(int x,int y));
-// 마우스 버튼을 누르지 않은 채 마우스를 움직일 때 호출될 함수 등록
-// 
-// 10. 애니메이션 구현을 위한 타이머 설정 함수
-// void glutTimerFunc(unsigned int msecs,(*func)(int value), int value);
-// 타임 아웃이 발생할 경우 호출될 콜백 함수를 등록한다.
-// msecs: 콜백 함수를 호출하기 전까지 기다릴 시간 (밀리세컨 단위)
-// func : 호출할 함수의 이름
-// value : 콜백 함수로 전달할 값
-// 이 함수는 한 번만 실행되므로 지속적인 애니메이션을 위해서는 타이머 함수 내에 타이머를 다시 호출해야한다
-// 
-// 11. 현재 윈도우를 refresh할 때 호출하는 함수
-// void glutPostRedisplay(void)
-//  현재 윈도우를 refresh하게 한다.
-// 출력 자료를 변경한 후 화면 다시 그리기를 하기위하여 그리기 콜백 함수를 호출해야 할 때 불러준다.
-// Refresh 되기 전에 여러 번 호출해도 단 한번만 refresh한다.
-// 
-//12. 인자값의 상태 변수로 다양한 값을 읽어오는 함수 
-// int glutGet(int state)
-// State:
-// GLUT_SCREEN_WIDTH : 스크린의 폭(픽셀 단위)
-// GLUT_SCREEN_HEIGHT : 스크린의 높이(픽셀 단위)
-// GLUT_ELAPSED_TIME : glutInit이 호출된 이후의 밀리세컨 단위의 시간
-// GLUT_WINDOW_X, GLUT_WINDOW_Y, GLUT_WINDOW_WIDTH, GLUT_WINDOW_HEIGHT…
-// 
-// 13. 메뉴 만들기
-// 13-1. 팝업 메뉴 만들기
-// int glutCreateMenu(void(*func)(int value));
-// 리턴값: 유일한 정수타입의 메뉴 구별자(1부터 시작)
-// 
-// 13-2. 마우스 버튼에 메뉴 삽입하기
-// void glutAttachMenu(int button);
-// void glutDetachMenu(int button);
-// Button: 버튼 (GLUT_LEFT_BUTTON / GLUT_MIDDLE_BUTTON / GLUT_RIGHT_BOTTON)
-// 
-// 13-3. 메뉴 항목 추가하기
-// void glutAddMenyEntry(char *name, int value);
-// Name : 메뉴 엔트리의 이름
-// value : 메뉴가 선택되면 메뉴의 콜백 함수에 리턴할 값
-// 
-// 13-4. 메뉴의 서브 메뉴 추가하기
-// void glutAddSubMenu (char *name, int menu);
-// Name : 서브 메뉴의 이름
-// Menu : 메뉴의 구별자
-// 
-// 13-5. 메뉴 없애기
-// void glueDestroyMenu(int menu);
-// 
-// 
-//
+static polygon_type draw_mode;
+
+
+GLvoid Mouse(int button, int state, int x, int y)
+{
+	if (polygons.size() >= 10)
+		return;
+
+	float xpos = x;
+	float ypos = y;
+
+	// 마우스 좌표 변환
+	Mouse_Convert_Win_To_OpenGL(xpos, ypos, window_x, window_y);
+	/*pre_xpos = xpos;
+	pre_ypos = ypos;
+	vPos<float> eraser_pos(xpos, ypos);
+	*/
+
+	switch (button)
+	{
+	case GLUT_LEFT_BUTTON: // 사각형 내부 - 색상 랜덤, 사각형 외부 - 배경색 랜덤
+	{
+		if (state == GLUT_DOWN)
+		{
+			switch (draw_mode)
+			{
+			case mode_Default:
+				break;
+			case mode_Point:
+			{
+				class::Polygon* temp = new Dot(xpos,ypos,0.f);
+				polygons.emplace_back(temp);
+			}
+				break;
+			case mode_Line:
+			{
+				class::Polygon* temp = new Line(xpos - 0.1f, ypos, 0.f, xpos + 0.1f, ypos, 0);
+				polygons.emplace_back(temp);
+			}
+				break;
+			case mode_Triangle:
+			{
+				class::Polygon* temp = new Triangle(xpos - 0.1f, ypos - 0.1f, 0.f, xpos, ypos+0.1f, 0,xpos + 0.1f, ypos - 0.1f, 0);
+				polygons.emplace_back(temp);
+			}
+				break;
+			case mode_Rect:
+			{
+				class::Polygon* temp = new Rect_p(xpos,ypos,0.1f);
+				
+			}
+				break;
+			case mode_End:
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	}
+	InitBuffer();
+	glutPostRedisplay();
+}
+GLvoid Keyboard(unsigned char key, int x, int y)
+{
+	//키보드 명령에 따라, 마우스를 누르는 위치에 점, 선, 삼각형 또는 사각형(삼각형 2개 붙이기) 그린다.
+	//	색상과 크기는 자율적으로 정하고, 최대 10개의 도형을 그린다.
+	//	키보드 명령
+	//	p : 점 그리기
+	//	l : 선 그리기
+	//	t : 삼각형 그리기
+	//	r : 사각형 그리기
+	//	w / a / s / d : 그린 모든 도형 중 랜덤하게 한 개를 선택한 후,
+	// 화면에서 위 / 좌 / 아래 / 우측으로 이동한다.
+	// 명령어를 선택할 때마다 다른 도형이 선택되어 이동된다.
+	//	c : 모든 도형을 삭제한다.
+
+	if (key == 'p')
+	{
+		draw_mode = mode_Point;
+	}
+	else if (key == 'l')
+	{
+		draw_mode = mode_Line;
+	}
+	else if (key == 't')
+	{
+		draw_mode = mode_Triangle;
+	}
+	else if (key == 'r')
+	{
+		draw_mode = mode_Rect;
+	}
+	else if (key == 'c')
+	{
+		polygons.clear();
+	}
+	else if (key == 'w' || key == 'a' || key == 's' || key == 'd')
+	{
+		if (polygons.empty())
+			return;
+		polygons[Random_Number<int>(1, polygons.size())-1]->move_On_dir(key);
+	}
+	InitBuffer();
+	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
+}
+
+void InitBuffer()
+{
+	glGenVertexArrays(10, vao); //--- VAO 를 지정하고 할당하기
+
+	for (size_t i = 0; i < polygons.size(); i++)
+	{
+		glBindVertexArray(vao[i]); //--- VAO를 바인드하기
+		polygons[i]->init_buffer_polygon(vao, vbo);
+	}
+
+	//glBindVertexArray(vao[0]); //--- VAO를 바인드하기
+	//{
+	//	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+
+	//	//--- 1번째 VBO를 활성화하여 바인드하고, 버텍스 속성 (좌표값)을 저장
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+
+	//	//--- 변수 triShape에서 버텍스 데이터 값을 버퍼에 복사한다.
+	//	//--- triShape 배열의 사이즈: 9 * float
+	//	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), l.get_vertex_ptr(), GL_STATIC_DRAW);
+
+	//	//--- 좌표값을 attribute 인덱스 0번에 명시한다: 버텍스 당 3* float
+	//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	//	//--- attribute 인덱스 0번을 사용가능하게 함
+	//	glEnableVertexAttribArray(0);
+
+	//	//--- 2번째 VBO를 활성화 하여 바인드 하고, 버텍스 속성 (색상)을 저장
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	//	//--- 변수 colors에서 버텍스 색상을 복사한다.
+	//	// 
+	//	//--- colors 배열의 사이즈: 9 *float
+	//	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), l.get_color_ptr(), GL_STATIC_DRAW);
+	//	//--- 색상값을 attribute 인덱스 1번에 명시한다: 버텍스 당 3*float
+	//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	//	//--- attribute 인덱스 1번을 사용 가능하게 함.
+	//	glEnableVertexAttribArray(1);
+	//}
+
+	//glBindVertexArray(vao[1]); //--- VAO를 바인드하기
+	//{
+
+	//	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+
+	//	//--- 1번째 VBO를 활성화하여 바인드하고, 버텍스 속성 (좌표값)을 저장
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+
+	//	//--- 변수 triShape에서 버텍스 데이터 값을 버퍼에 복사한다.
+	//	//--- triShape 배열의 사이즈: 9 * float
+	//	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), triShape2, GL_STATIC_DRAW);
+
+	//	//--- 좌표값을 attribute 인덱스 0번에 명시한다: 버텍스 당 3* float
+	//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	//	//--- attribute 인덱스 0번을 사용가능하게 함
+	//	glEnableVertexAttribArray(0);
+
+	//	//--- 2번째 VBO를 활성화 하여 바인드 하고, 버텍스 속성 (색상)을 저장
+	//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	//	//--- 변수 colors에서 버텍스 색상을 복사한다.
+	//	//--- colors 배열의 사이즈: 9 *float
+	//	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
+	//	//--- 색상값을 attribute 인덱스 1번에 명시한다: 버텍스 당 3*float
+	//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	//	//--- attribute 인덱스 1번을 사용 가능하게 함.
+	//	glEnableVertexAttribArray(1);
+	//}
+}
+
+
+void make_shaderProgram()
+{
+	make_vertexShaders(); //--- 버텍스 세이더 만들기
+	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
+	//-- shader Program
+	shaderProgramID = glCreateProgram();
+	glAttachShader(shaderProgramID, vertexShader);
+	glAttachShader(shaderProgramID, fragmentShader);
+
+	glLinkProgram(shaderProgramID);
+	// 정상 링크 확인하는 방법은 Tutorial 4 참고
+
+	//--- 세이더 삭제하기
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	//--- Shader Program 사용하기
+	glUseProgram(shaderProgramID);
+}
+
+char* filetobuf(const char* file)
+{
+	FILE* fptr;
+	long length;
+	char* buf;
+	fptr = fopen(file, "rb"); // Open file for reading
+	if (!fptr) // Return NULL on failure
+		return NULL;
+	fseek(fptr, 0, SEEK_END); // Seek to the end of the file
+	length = ftell(fptr); // Find out how many bytes into the file we are
+	buf = (char*)malloc(length + 1); // Allocate a buffer for the entire length of the file and a null terminator
+	fseek(fptr, 0, SEEK_SET); // Go back to the beginning of the file
+	fread(buf, length, 1, fptr); // Read the contents of the file in to the buffer
+	fclose(fptr); // Close the file
+	buf[length] = 0; // Null terminator
+	return buf; // Return the buffer
+}
+
+
+
+
+void make_vertexShaders()
+{
+	vertexSource = filetobuf("vertex.glsl");
+		//--- 버텍스 세이더 객체 만들기
+		vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	//--- 세이더 코드를 세이더 객체에 넣기
+	glShaderSource(vertexShader, 1, (const GLchar**)&vertexSource, 0);
+	//--- 버텍스 세이더 컴파일하기
+	glCompileShader(vertexShader);
+	
+	//--- 컴파일이 제대로 되지 않은 경우: 에러 체크
+	GLint result;
+	GLchar errorLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
+	/*세이더 정보 가져오기
+	 void glGetShaderiv (GLuint shader, GLenum pname, GLint *params);
+	 shader : 세이더 객체
+	 pname : 객체 파라미터
+		GL_SHADER_TYPE, GL_DELETE_STATUS, GL_COMPILE_STATUS, GL_INFO_LOG_LENGTH, GL_SHADER_SOURCE_LENGTH)
+	 params : 리턴 값
+		GL_SHADER_TYPE : 세이더 타입 리턴(GL_VERTEX_SHADER / GL_FRAGMENT_SHADER)
+		GL_DELETE_STATUS : 세이더가 삭제됐으면 GL_TRUE, 아니면 GL_FALSE
+		GL_COMPILE_STATUS : 컴파일이 성공했으면 GL_TRUE, 아니면 GL_FALSE
+		GL_INFO_LOG_LENGTH : 세이더의 INFORMATION LOG 크기
+		GL_SHADER_SOURCE_LENGTH : 세이더 소스 크기
+		에러 발생 시, GL_INVALID_VALUE, GL_INVALID_OPERATON, GL_INVALID_ENUM*/
+
+	if(!result)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
+		/*void glGetShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei * length, GLchar * infoLog);
+		 세이더 객체의 information log 가져오기
+			 shader : 세이더 객체
+			 maxLength : information log 크기
+			 length : infoLog 길이
+			 infoLog : information log*/
+		std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
+		return;
+	}
+}
+
+
+void make_fragmentShaders()
+{
+	fragmentSource = filetobuf("fragment.glsl");
+	//--- 프래그먼트 세이더 객체 만들기
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	//--- 세이더 코드를 세이더 객체에 넣기
+	glShaderSource(fragmentShader, 1, (const GLchar**)&fragmentSource, 0);
+	//--- 프래그먼트 세이더 컴파일
+	glCompileShader(fragmentShader);
+	//--- 컴파일이 제대로 되지 않은 경우: 컴파일 에러 체크
+	GLint result;
+	GLchar errorLog[512];
+	// 버텍스 쉐이더 설명 참조
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
+	if (!result)
+	{
+		// 버텍스 쉐이더 설명 참조
+		glGetShaderInfoLog(fragmentShader, 512, NULL, errorLog);
+		std::cerr << "ERROR: fragment shader 컴파일 실패\n" << errorLog << std::endl;
+		return;
+	}
+}
+
+
+
 
 
 

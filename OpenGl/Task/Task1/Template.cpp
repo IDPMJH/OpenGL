@@ -118,7 +118,7 @@ GLvoid Win_Resize(int w, int h)
 // 
 // 4. void glutKeyBoardFunc (void(*func)(unsigned char key, int x, int y));
 // 키보드와 인자로 지정한 루틴을 연결하여 키를 누를 떄 호출되도록 설정한다.
-// 키보드 입력이 일어날떄마다 ASCII코드 값이 설정된다.
+// 키보드 입력이 일어날 때마다 ASCII코드 값이 설정된다.
 // 
 // 
 // 5. ASCII가 아닌 특수 키인 경우
