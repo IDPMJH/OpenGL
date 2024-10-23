@@ -1,4 +1,4 @@
-#include "Line.h"
+#include "Line_12.h"
 #include "global.h"
 #include <vector>
 #include <cmath>
@@ -22,19 +22,30 @@ Line::Line(GLfloat f1, GLfloat f2, GLfloat f3, GLfloat f4, GLfloat f5, GLfloat f
 	,{ Random_0_to_1f(),Random_0_to_1f() ,Random_0_to_1f() }}
 	,_size(3)
 	, _linemode(true)
-
 {
 }
 
-Line::Line(GLfloat x, GLfloat y)
+Line::Line(GLfloat x, GLfloat y, GLfloat offset)
 	:Polygon(mode_Line)
 	, _mouse_x(x)
+	, _xpos(x)
+	, _ypos(y)
+	, _offset(offset)
+	, _lineshape
+	{
+		{x - offset, y, 0.f},
+		{x + offset, y, 0.f}
+	}
 	, _mouse_y(y)
 	, _radius(0.f)
 	, _theta(0.f)
 	, _size(3)
 	, _linemode(true)
-
+	, _Colors
+	{
+		{Random_0_to_1f(),Random_0_to_1f() ,Random_0_to_1f()},
+		{Random_0_to_1f(),Random_0_to_1f() ,Random_0_to_1f()}
+	}
 {
 }
 
@@ -72,8 +83,9 @@ void Line::move_On_dir(char dir)
 
 void Line::Draw_Polygon()
 {
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 	if(_linemode == true)
-		glDrawArrays(GL_LINE_STRIP, 0, _size - 1);
+		glDrawArrays(GL_LINES, 0, _size - 1);
 	else
 		glDrawArrays(GL_POINTS, 0, _size - 1);
 }
@@ -86,8 +98,8 @@ void Line::init_buffer_polygon(GLuint* vao, GLuint* vbo)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
 	//--- 변수 triShape에서 버텍스 데이터 값을 버퍼에 복사한다.
-	// Line size = 3
-	glBufferData(GL_ARRAY_BUFFER, 3*_size * sizeof(GLfloat), get_vertex_ptr(), GL_STATIC_DRAW);
+	// Line size = 3 * 2
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), get_vertex_ptr(), GL_STATIC_DRAW);
 
 	//--- 좌표값을 attribute 인덱스 0번에 명시한다: 버텍스 당 3* float
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -100,7 +112,7 @@ void Line::init_buffer_polygon(GLuint* vao, GLuint* vbo)
 	//--- 변수 colors에서 버텍스 색상을 복사한다.
 	// 
 	//--- colors 배열의 사이즈: 6= Line
-	glBufferData(GL_ARRAY_BUFFER, 3 * _size * sizeof(GLfloat), get_color_ptr(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(GLfloat), get_color_ptr(), GL_STATIC_DRAW);
 	//--- 색상값을 attribute 인덱스 1번에 명시한다: 버텍스 당 3*float
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -110,6 +122,39 @@ void Line::init_buffer_polygon(GLuint* vao, GLuint* vbo)
 
 void Line::Update()
 {
+}
+
+void Line::Change_Color(GLfloat r, GLfloat g, GLfloat b)
+{
+	for (auto &a : _Colors)
+	{
+		a = { r,g,b };
+	}
+}
+
+void Line::Left_Click(float mouse_x, float mouse_y)
+{
+	if (mouse_x < _xpos + _offset && mouse_x > _xpos - _offset &&
+		mouse_y < _ypos + _offset / 2.f && mouse_y > _ypos - _offset / 2.f)
+		_clicked = true;
+}
+
+void Line::Update(glm::vec2 vpos)
+{
+	_xpos += vpos.x;
+	_ypos += vpos.y;
+
+	// 폴리곤 초기화
+	_vpos.x = _xpos;
+	_vpos.y = _ypos;
+	_width = _height = _offset * 2;
+
+
+	_lineshape = vector<glm::vec3>
+	{
+		{_xpos - -_offset, _ypos, 0.f},
+		{_xpos + -_offset, _ypos, 0.f}
+	};
 }
 
 GLfloat* Line::get_vertex_ptr()

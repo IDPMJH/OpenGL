@@ -1,12 +1,14 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include "global.h"
+#include "Polygon_12.h"
+#include "Triangle_12.h"
+#include "Dot_12.h"
+#include "Line_12.h"
+#include "Rect_12.h"
+#include "Pentagon_12.h"
+#include "component_12.h"
 
-#include "Polygon.h"
-#include "Triangle.h"
-#include "Dot.h"
-#include "Line.h"
-#include "Rect.h"
-#include "component_7.h"
+
 
 
 
@@ -15,6 +17,8 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
+int check_quad(float xpos, float ypos);
+void UserTimerFunc(int value);
 
 
 void make_shaderProgram();
@@ -24,7 +28,9 @@ void make_fragmentShaders();
 
 
 int window_x = 800;
-int window_y = 600;
+int window_y = 800;
+
+
 
 GLint width, height;
 GLuint shaderProgramID; //--- 세이더 프로그램 이름
@@ -32,13 +38,29 @@ GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
 
+
+bool on_timer = true;
+bool on_mouse = true;
+bool _draws_of_all = true;
+
+
+
+vector<class::Polygon*> Polygons;
+
+
+GLuint vao1[4], vao2[3], vao3[3], vao4[3], vaol[2];
+GLuint vao[4];
+GLuint vaom[12];
+GLuint vbo[4];
+glm::vec3 clcolor(0.f,0.f,0.f);
+
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
 {
 	glutInit(&argc, argv); // glut 초기화
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 100); // 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
-	int i = glutCreateWindow("Task_1_7"); // 윈도우 생성 (윈도우 이름)
+	int i = glutCreateWindow("Task_1_10"); // 윈도우 생성 (윈도우 이름)
 
 	// 윈도우 파괴
 	//void glutDestroyWindow(int winID);
@@ -70,11 +92,43 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
-
-	//Triangle t1;
+	
 
 	make_shaderProgram();
+	//glGenVertexArrays(2, vaol); //--- VAO 를 지정하고 할당하기
+
+	//glBindVertexArray(vaol[0] ); //--- VAO를 바인드하기
+	//lx.init_buffer_polygon(vaol, vbo);
+
+	//glBindVertexArray(vaol[1]);
+	//ly.init_buffer_polygon(vaol, vbo);
+	//ly.init_buffer_polygon(vaol, vbo);
+	class::Polygon* lx = new Line(-1.f, 0.f, 0.f, 1.f, 0.f, 0);
+	class::Polygon* ly = new Line(0.f, 1.f, 0.f, 0.f, -1.f, 0);
+
+	class::Polygon* LinetoTri = new Triangle(-0.8f, 0.2f, 0.f, -0.5f, 0.8f, 0.f, -0.5f, 0.799f, 0.f);
+	LinetoTri->Change_Color(0.f, 0.f, 1.f);
+
+	class::Polygon* TritoRect = new Rect_p(0.5f, 0.8f, 0.2f, 0.2f, 0.8f, 0.2f);
+	TritoRect->Change_Color(1.f, 0.f, 0.f);
+
+	class::Polygon* RecttoPenta = new Pentagon(-0.8f, -0.4f,	-0.8f, -0.8f,	-0.2f, -0.8f,	-0.2f, -0.4f);
+	RecttoPenta->Change_Color(0.f, 1.f, 0.f);
+
+	class::Polygon* PentatoLine = new Pentagon(0.5f, -0.2f,		0.2f, -0.4f,	0.3f, -0.8f,	0.7f, -0.8f,	0.8f,-0.4f);
+	PentatoLine->Change_Color(0.f, 1.f, 1.f);
+
+	Polygons.emplace_back(lx);
+	Polygons.emplace_back(ly);
+	Polygons.emplace_back(LinetoTri);
+	Polygons.emplace_back(TritoRect);
+	Polygons.emplace_back(RecttoPenta);
+	Polygons.emplace_back(PentatoLine);
+
+
 	InitBuffer();
+	glLineWidth(2);
+	glPointSize(2);
 
 
 
@@ -85,18 +139,17 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	또한, 이벤트 처리가 시작되고 디스플레이 콜백으로 등록된 함수가 호출된다.
 	마우스, 키보드 등의 콜백 함수들이 호출된다
 	메인 함수는 최소한 한번의 glutMainLoop함수를 호출해야한다.*/
-
+	glutPostRedisplay();
 	//void glutLeaveMainLoop(); - 이벤트 프로세싱(프로그램 종료)
+	glutTimerFunc(10, UserTimerFunc, 1);
 }
 
 
 
-GLuint vao[10], vbo[4];
-vector<class::Polygon*> polygons;
 
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 {
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // 바탕색을 ‘blue’로 지정
+	glClearColor(1.f,1.f,1.f,1.0f);
 	/*r, g, b: red, green, blue 값
 	a : alpha 값(1.0값으로 고정)*/
 	glClear(GL_COLOR_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
@@ -112,8 +165,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
-	glLineWidth(2);
-	glPointSize(5);
+
 	glUseProgram(shaderProgramID);
 
 
@@ -121,16 +173,21 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	mat4 modelt = mat4(1.f);
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(modelt));
 
-	for (size_t i = 0; i < polygons.size(); i++)
+
+	for (size_t i = 0; i < Polygons.size(); i++)
 	{
 		glBindVertexArray(vao[i]);
-		polygons[i]->Draw_Polygon();
+		Polygons[i]->Draw_Polygon();
 	}
+
+	/*glBindVertexArray(vaol[0]);
+	lx.Draw_Polygon();
+	glBindVertexArray(vaol[1]);
+	ly.Draw_Polygon();*/
 	//--- 사용할 VAO 불러오기
 	//glBindVertexArray(vao[1]);
 	//// 그리기
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
-
 
 	//void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 	/*바인드 한 배열 데이터로부터 프리미티브 렌더링 하기
@@ -148,30 +205,30 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	 count : 렌더링 할 인덱스 개수
 	 프리미티브(primitive) : 오픈지엘 렌더링의 기본 단위로 이용 가능한 가장 단순한 요소  점, 선, 삼각형*/
 
-	/*	GL에서 그리기
-		void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
-	 배열 데이터로부터 프리미티브 렌더링 하기, 배열 데이터의 인덱스를 사용
-		mode : 렌더링 할 프리미티브의 종류
-		GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES 등
-		count : 렌더링할 요소의 개수
-		type : indices 값의 타입
-		GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, 또는 GL_UNSIGNED_INT
-		indices : 바인딩 되는 버퍼의 데이터 저장소에 있는 배열의 첫 번째 인덱스 오프셋*/
-	
-	//기본 속성 바꾸기
-	/*점 크기 설정
-		void glPointSize(GLfloat size);
-		size : 점의 크기(초기값 : 1)
+	 /*	GL에서 그리기
+		 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
+		  배열 데이터로부터 프리미티브 렌더링 하기, 배열 데이터의 인덱스를 사용
+		 mode : 렌더링 할 프리미티브의 종류
+		 GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES 등
+		 count : 렌더링할 요소의 개수
+		 type : indices 값의 타입
+		 GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, 또는 GL_UNSIGNED_INT
+		 indices : 바인딩 되는 버퍼의 데이터 저장소에 있는 배열의 첫 번째 인덱스 오프셋*/
 
-	선의 굵기 조정
-		void glLineWidth(GLfloat width);
-		width : 선의 굵기(초기값 : 1)
+		 //기본 속성 바꾸기
+		 /*점 크기 설정
+			 void glPointSize(GLfloat size);
+			 size : 점의 크기(초기값 : 1)
 
-	폴리곤 모드 설정
-		void glPolygonMode(GLenum face, GLenum mode);
-		face : 모드를 설정할 면(GL_FRONT_AND_BACK)
-		mode : 모드
-		GL_POINT, GL_LINE, GL_FILL*/
+		 선의 굵기 조정
+			 void glLineWidth(GLfloat width);
+			 width : 선의 굵기(초기값 : 1)
+
+		 폴리곤 모드 설정
+			 void glPolygonMode(GLenum face, GLenum mode);
+			 face : 모드를 설정할 면(GL_FRONT_AND_BACK)
+			 mode : 모드
+			 GL_POINT, GL_LINE, GL_FILL*/
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 
@@ -198,12 +255,14 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 	window_y = h;
 }
 
-static polygon_type draw_mode;
 
+int make_line_size = 1;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
-	if (polygons.size() >= 10)
+
+
+	if (on_mouse == false)
 		return;
 
 	float xpos = x;
@@ -211,111 +270,63 @@ GLvoid Mouse(int button, int state, int x, int y)
 
 	// 마우스 좌표 변환
 	Mouse_Convert_Win_To_OpenGL(xpos, ypos, window_x, window_y);
-	/*pre_xpos = xpos;
-	pre_ypos = ypos;
-	vPos<float> eraser_pos(xpos, ypos);
-	*/
-
+	int quadrant = check_quad(xpos, ypos);
 	switch (button)
 	{
-	case GLUT_LEFT_BUTTON: // 사각형 내부 - 색상 랜덤, 사각형 외부 - 배경색 랜덤
+	case GLUT_RIGHT_BUTTON:
+	{
+		return;
+		if (state == GLUT_DOWN)
+		{
+		
+		}
+		break;
+	}
+	case GLUT_LEFT_BUTTON: 
 	{
 		if (state == GLUT_DOWN)
 		{
-			switch (draw_mode)
-			{
-			case mode_Default:
-				break;
-			case mode_Point:
-			{
-				class::Polygon* temp = new Dot(xpos,ypos,0.f);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_Line:
-			{
-				class::Polygon* temp = new Line(xpos - 0.1f, ypos, 0.f, xpos + 0.1f, ypos, 0);
-				
-				polygons.emplace_back(temp);
-
-			}
-				break;
-			case mode_Triangle:
-			{
-				class::Polygon* temp = new Triangle(xpos - 0.1f, ypos - 0.1f, 0.f, xpos, ypos+0.1f, 0,xpos + 0.1f, ypos - 0.1f, 0);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_Rect:
-			{
-				class::Polygon* temp = new Rect_p(xpos,ypos,0.1f);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_End:
-				break;
-			default:
-				break;
-			}
+		
 		}
 	}
+	break;
 	}
 	InitBuffer();
 	glutPostRedisplay();
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	//키보드 명령에 따라, 마우스를 누르는 위치에 점, 선, 삼각형 또는 사각형(삼각형 2개 붙이기) 그린다.
-	//	색상과 크기는 자율적으로 정하고, 최대 10개의 도형을 그린다.
-	//	키보드 명령
-	//	p : 점 그리기
-	//	l : 선 그리기
-	//	t : 삼각형 그리기
-	//	r : 사각형 그리기
-	//	w / a / s / d : 그린 모든 도형 중 랜덤하게 한 개를 선택한 후,
-	// 화면에서 위 / 좌 / 아래 / 우측으로 이동한다.
-	// 명령어를 선택할 때마다 다른 도형이 선택되어 이동된다.
-	//	c : 모든 도형을 삭제한다.
+	return;
 
-	if (key == 'p')
-	{
-		draw_mode = mode_Point;
-	}
-	else if (key == 'l')
-	{
-		draw_mode = mode_Line;
-	}
-	else if (key == 't')
-	{
-		draw_mode = mode_Triangle;
-	}
-	else if (key == 'r')
-	{
-		draw_mode = mode_Rect;
-	}
-	else if (key == 'c')
-	{
-		polygons.clear();
-	}
-	else if (key == 'w' || key == 'a' || key == 's' || key == 'd')
-	{
-		if (polygons.empty())
-			return;
-		polygons[Random_Number<int>(1, polygons.size())-1]->move_On_dir(key);
-	}
+	on_timer = true;
 	InitBuffer();
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
 
 void InitBuffer()
 {
-	glGenVertexArrays(10, vao); //--- VAO 를 지정하고 할당하기
+	/*여러 다각형이 그려지지 않는 이유는
+	glGenVertexArrays 함수가 루프 내에서
+	반복 호출되기 때문일 수 있습니다.
+	이 함수는 새로운 VAO를 생성하고 vao1 배열에 저장합니다.
+	그러나 이 배열은 루프가 반복될 때마다 덮어쓰여지므로,
+	마지막 다각형만이 올바르게 그려질 수 있습니다.*/
 
-	for (size_t i = 0; i < polygons.size(); i++)
+	glGenVertexArrays(10, vao); //--- VAO 를 지정하고 할당하기
+	for (size_t i = 0; i < Polygons.size(); i++)
 	{
 		glBindVertexArray(vao[i]); //--- VAO를 바인드하기
-		polygons[i]->init_buffer_polygon(vao, vbo);
+		Polygons[i]->init_buffer_polygon(vao, vbo);
 	}
+	
+
+	//glGenVertexArrays(2, vaol); //--- VAO 를 지정하고 할당하기
+
+	//glBindVertexArray(vaol[0]); //--- VAO를 바인드하기
+	//lx.init_buffer_polygon(vaol, vbo);
+
+	//glBindVertexArray(vaol[1]);
+	//ly.init_buffer_polygon(vaol, vbo);
 
 	//glBindVertexArray(vao[0]); //--- VAO를 바인드하기
 	//{
@@ -422,13 +433,13 @@ char* filetobuf(const char* file)
 void make_vertexShaders()
 {
 	vertexSource = filetobuf("vertex.glsl");
-		//--- 버텍스 세이더 객체 만들기
-		vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	//--- 버텍스 세이더 객체 만들기
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
 	glShaderSource(vertexShader, 1, (const GLchar**)&vertexSource, 0);
 	//--- 버텍스 세이더 컴파일하기
 	glCompileShader(vertexShader);
-	
+
 	//--- 컴파일이 제대로 되지 않은 경우: 에러 체크
 	GLint result;
 	GLchar errorLog[512];
@@ -446,7 +457,7 @@ void make_vertexShaders()
 		GL_SHADER_SOURCE_LENGTH : 세이더 소스 크기
 		에러 발생 시, GL_INVALID_VALUE, GL_INVALID_OPERATON, GL_INVALID_ENUM*/
 
-	if(!result)
+	if (!result)
 	{
 		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
 		/*void glGetShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei * length, GLchar * infoLog);
@@ -483,9 +494,36 @@ void make_fragmentShaders()
 		return;
 	}
 }
+int check_quad(float xpos, float ypos)
+{
+	if (xpos >= 0)
+	{
+		if (ypos >= 0)
+			return 1;
+		else
+			return 4;
+	}
+	else
+	{
+		if (ypos >= 0)
+			return 2;
+		else
+			return 3;
+	}
+}
 
+void UserTimerFunc(int value)
+{
+	for (auto& a : Polygons)
+	{
+		a->Update();
+		InitBuffer();
+	}
 
-
+	glutPostRedisplay();
+	if (on_timer)
+		glutTimerFunc(10, UserTimerFunc, 1);
+}
 
 
 

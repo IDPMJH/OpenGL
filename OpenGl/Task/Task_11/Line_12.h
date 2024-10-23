@@ -1,12 +1,8 @@
 #pragma once
-#include <vector>
 
-#include "Polygon.h"
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "Polygon_12.h"
 
-using std::vector;
+
 
 
 
@@ -22,14 +18,15 @@ public:
 	virtual void Draw_Polygon();
 	virtual void init_buffer_polygon(GLuint* vao, GLuint* vbo);
 	virtual void Update();
+	virtual void Change_Color(GLfloat r, GLfloat g, GLfloat b);
 	GLfloat* get_vertex_ptr();
 	GLfloat* get_color_ptr();
 	void init_line(bool ccwon);
 
 public:
 	vector<glm::vec3> _lineshape;
-	//GLfloat _lineshape[2][3]; //--- 두 꼭지점 색상
 	vector<glm::vec3> _Colors;
+	//GLfloat _lineshape[2][3]; //--- 두 꼭지점 색상
 	//GLfloat _Colors[2][3]; //--- 두 꼭지점 색상
 	int _size;
 	float _radius;

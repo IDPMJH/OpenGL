@@ -1,10 +1,7 @@
 #pragma once
-#include "Polygon.h"
-#include "ogldev_math_3d.h"
+#include "Polygon_12.h"
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+
 
 
 class Matrix4f;
@@ -40,6 +37,7 @@ public:
 	virtual void Draw_Polygon() override;
 	virtual void init_buffer_polygon(GLuint* vao, GLuint* vbo);
 	virtual void Update() override;
+	virtual void Change_Color(GLfloat r, GLfloat g, GLfloat b);
 
 	void stand_shape();
 
@@ -67,8 +65,10 @@ public:
 
 	glm::vec2 get_center();
 public:
-	GLfloat _TriShape[3][3];
-	GLfloat _Colors[3][3]; //--- 삼각형 꼭지점 색상
+	//GLfloat _TriShape[3][3];
+	//GLfloat _Colors[3][3]; //--- 삼각형 꼭지점 색상
+	vector<glm::vec3> _TriShape;
+	vector<glm::vec3> _Colors;
 	glm::mat4 _Translation;
 	glm::mat4 _Rotation;
 	glm::mat4 _Scaling;
@@ -85,6 +85,12 @@ public:
 	float _offset;
 	float _angle_radian;
 	float _ter_offset = 0.f;
+
+
+
+
+	// task_11of
+	float _x1, _y1, _x2, _y2, _x3, _y3;
 
 	int _ycount = 0;
 	int _xcount = 0;

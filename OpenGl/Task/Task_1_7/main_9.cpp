@@ -29,12 +29,18 @@ void make_fragmentShaders();
 int window_x = 800;
 int window_y = 800;
 
+
+
 GLint width, height;
 GLuint shaderProgramID; //--- 세이더 프로그램 이름
 GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
+
+
 bool on_timer = true;
+bool on_mouse = true;
+
 vector<class::Triangle*> Triangles;
 
 Line lx(-1.f, 0.f, 0.f, 1.f, 0.f, 0);
@@ -81,7 +87,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
-	glutTimerFunc(50, UserTimerFunc, 1);
+	glutTimerFunc(10, UserTimerFunc, 1);
 
 	//Triangle t1;
 
@@ -144,8 +150,8 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 		glm::mat4 Rot = Triangles[i]->_Rotation;
 		glm::mat4 Trs = Triangles[i]->_Translation;
 		//Matrix4f FinalTransform = Triangles[i]->_Rotation * Triangles[i]->_Translation;
-		//glm::mat4 FinalTransform = Trs * Rot;
-		glm::mat4 FinalTransform = Rot * Trs;
+		glm::mat4 FinalTransform = Triangles[i]->_Transform;
+		//glm::mat4 FinalTransform = Triangles[i]->_Transform;
 
 			/*(cosf(1.5708f), -sinf(1.5708f), 0.f, 0.f,
 			sinf(1.5708f), cosf(1.5708f), 0.f, 0.f,
@@ -240,6 +246,8 @@ GLvoid Mouse(int button, int state, int x, int y)
 {
 	if (Triangles.size() >= 4)
 		return;
+	if (on_mouse == false)
+		return;
 
 	float xpos = x;
 	float ypos = y;
@@ -257,43 +265,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 	{
 	case GLUT_RIGHT_BUTTON: // 사각형 내부 - 색상 랜덤, 사각형 외부 - 배경색 랜덤
 	{
+		return;
 		if (state == GLUT_DOWN)
 		{
-			switch (draw_mode)
-			{
-			case mode_Default:
-				break;
-			case mode_Point:
-			{
-				class::Polygon* temp = new Dot(xpos, ypos, 0.f);
-				//polygons.emplace_back(temp);
-			}
-			break;
-			case mode_Line:
-			{
-				class::Polygon* temp = new Line(xpos - 0.1f, ypos, 0.f, xpos + 0.1f, ypos, 0);
-				//polygons.emplace_back(temp);
-			}
-			break;
-			case mode_Triangle:
-			{
-				float fund = Random_0_to_1f();
-				fund = fund * 0.1f + 0.1f;
-				class::Triangle* temp = new Triangle(xpos, ypos, fund, quadrant);
-				Triangles.emplace_back(temp);
-			}
-			break;
-			case mode_Rect:
-			{
-				class::Polygon* temp = new Rect_p(xpos, ypos, 0.1f);
-				//polygons.emplace_back(temp);
-			}
-			break;
-			case mode_End:
-				break;
-			default:
-				break;
-			}
 		}
 		break;
 	}
@@ -321,6 +295,9 @@ GLvoid Mouse(int button, int state, int x, int y)
 			{
 				float fund = Random_0_to_1f();
 				fund = fund * 0.1f + 0.05f;
+				if (xpos + fund >= 1.f || xpos - fund <= -1.f ||
+					ypos + fund*2 >= 1.f || ypos - fund * 1.5f < -1.f)
+					return;
 				class::Triangle* temp = new Triangle(xpos, ypos, fund, quadrant);
 				Triangles.emplace_back(temp);
 			}
@@ -344,6 +321,8 @@ GLvoid Mouse(int button, int state, int x, int y)
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+	if (Triangles.empty())
+		return;
 	/*실습 8에서 그린 삼각형들이 각각 다른 방향과 다른 속도로 이동한다.
 		 실습 8과 같이 4개의 삼각형을 그릴 수 있다.
 		 삼각형은 이등변 삼각형으로 그린다.
@@ -353,38 +332,105 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		 3 :사각 스파이럴
 		 4 :원 스파이럴
 		 가장자리를 만나게 되면 삼각형의 방향이 바뀌게 된다.*/
+	for (auto& a : Triangles)
+	{
+		a->_Transform = mat4(1.f);
+	}
+
 
 	if (key == '1')
 	{
 		for (auto& a : Triangles)
-			a->_move = move_Bounce;
+		{
+			if (a->_move != move_Bounce)
+			{
+				a->stand_shape();
+				a->rotate45DegreeZ();
+				a->_dirx = dir_right;
+				a->_diry = dir_up;
+				a->_xspd = 0.01f;
+				a->_yspd = 0.01f;
+				a->_move = move_Bounce;
+			}
+		}
+		on_mouse = false;
 	}
 	else if (key == '2')
 	{
 		for (auto& a : Triangles)
-			a->_move = move_Zigzag;
+		{
+			if (a->_move != move_Zigzag)
+			{
+				a->stand_shape();
+				a->rotate_m_90DegreesZ();
+				a->_dirx = dir_right;
+				a->_xspd = 0.01f;
+				a->_yspd = 0.01f;
+				a->_move = move_Zigzag;
+				a->_ycount = 0;
+			}
+		}
+		on_mouse = false;
+
 	}
 	else if (key == '3')
 	{
 		for (auto& a : Triangles)
-			a->_move = move_Spiral_circle;
+		{
+			if(a->_move != move_Spiral_rect)
+			{
+				a->_move = move_Spiral_rect;
+				a->stand_shape();
+				a->_dirx = dir_left;
+				a->_diry = dir_up;
+				a->_xspd = 0.02f;
+				a->_yspd = 0.02f;
+				a->_xclash = false;
+				a->_yclash = false;
+				a->_xspiral_count = 0;
+				a->_yspiral_count = 0;
+				a->_limit_x = 1.f;
+				a->_limit_y = 1.f;
+				a->_spiral_in = true;
+				a->_xcount = abs((1.f - a->_xpos) / a->_xspd);
+				a->_ycount = abs((1.f - a->_ypos) / a->_yspd);
+				a->_xmaxcount = abs((1.f - a->_xpos) / a->_xspd);
+				a->_ymaxcount = abs((1.f - a->_ypos) / a->_yspd);
+			}
+		}
+		on_mouse = false;
 	}
 	else if (key == '4')
 	{
 		for (auto& a : Triangles)
 		{
-			a->_move = move_Spiral_rect;
-			/*a->_delta_x = 0.2f;
-			a->_delta_y = 0.2f;
-			a->_limit_x = 1.f;
-			a->_limit_y = 1.f;*/
+			a->_Trimat =
+			{
+				a->_TriShape[0][0],a->_TriShape[0][1],a->_TriShape[0][2],0.f,
+				a->_TriShape[1][0],a->_TriShape[1][1],a->_TriShape[1][2],0.f,
+				a->_TriShape[2][0],a->_TriShape[2][1],a->_TriShape[2][2],0.f,
+				0.f,0.f,0.f,1.0f
+			};
+			a->_Transform = mat4(1.f);
+			a->init_mat4();
+			a->_theta = 0.f;
+			a->_xspd = a->_xpos / 100.f;
+			a->_yspd = a->_ypos / 100.f;
+			//a->_xspd = 0.002f;
+			//a->_yspd = 0.002f;
+			a->_move = move_Spiral_circle;
 		}
+		on_mouse = false;
 
+	}
+	else if (key == 'c')
+	{
+		Triangles.clear();
+		on_mouse = true;
 	}
 	else return;
 
 	on_timer = true;
-	//glutTimerFunc(50, UserTimerFunc, 1);
 	InitBuffer();
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
@@ -608,7 +654,7 @@ void UserTimerFunc(int value)
 
 	glutPostRedisplay();
 	if (on_timer)
-		glutTimerFunc(50, UserTimerFunc, 1);
+		glutTimerFunc(10, UserTimerFunc, 1);
 }
 
 

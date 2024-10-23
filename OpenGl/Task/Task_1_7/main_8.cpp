@@ -52,7 +52,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 100); // 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
-	int i = glutCreateWindow("Task_1_7"); // 윈도우 생성 (윈도우 이름)
+	int i = glutCreateWindow("Task_1_8"); // 윈도우 생성 (윈도우 이름)
 
 	// 윈도우 파괴
 	//void glutDestroyWindow(int winID);

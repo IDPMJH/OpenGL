@@ -1,72 +1,58 @@
 #include <GL/glut.h>
 #include <cmath>
-#include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+// 마우스 좌표와 변의 길이
+float mouseX = 0.0f;
+float mouseY = 0.0f;
+float baseLength = 40.0f; // 밑변의 길이
+float sideLength = 60.0f;  // 다른 두 변의 길이
 
-// 초기 크기 및 축소율 설정
-float size = 1.0f;
-float scale = 0.9f;
-
-// 그리기 함수
-void drawSpiralSquares() {
-    float angle = 0.0f;
-    float x = 0.0f, y = 0.0f;
-
+void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // 반복해서 사각형을 그림
-    for (int i = 0; i < 50; ++i) {
-        glPushMatrix();
-        glTranslatef(x, y, 0.0f);
-        glRotatef(angle, 0.0f, 0.0f, 1.0f);
-        glScalef(size, size, 1.0f);
+    // 삼각형의 세 꼭지점 계산
+    float x1 = mouseX;
+    float y1 = mouseY + (2.0f / 3.0f) * sideLength;
+    float x2 = mouseX - baseLength / 2;
+    float y2 = mouseY - (1.0f / 3.0f) * sideLength;
+    float x3 = mouseX + baseLength / 2;
+    float y3 = y2;
 
-        // 사각형 그리기
-        glBegin(GL_LINE_LOOP);
-        glVertex2f(-0.5f, -0.5f);
-        glVertex2f(0.5f, -0.5f);
-        glVertex2f(0.5f, 0.5f);
-        glVertex2f(-0.5f, 0.5f);
-        glEnd();
+    // 삼각형 그리기
+    glBegin(GL_TRIANGLES);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y2);
+    glVertex2f(x3, y3);
+    glEnd();
 
-        glPopMatrix();
-
-        // 각도와 크기를 조절하여 다음 사각형의 위치와 크기 설정
-        angle += 30.0f; // 각도 증가
-        size *= scale;  // 크기 축소
-
-        // 다음 사각형의 중심 위치 조절
-        float distance = size * 0.5f;
-        x += distance * cos(angle * M_PI / 180.0f);
-        y += distance * sin(angle * M_PI / 180.0f);
-    }
-
-    glutSwapBuffers();
+    glFlush();
 }
 
-// 윈도우 초기화 및 설정
-void initialize() {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // 배경색을 검정색으로 설정
+void mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // 윈도우 좌표를 OpenGL 좌표로 변환
+        mouseX = (float)x;
+        mouseY = (float)(glutGet(GLUT_WINDOW_HEIGHT) - y);
+        glutPostRedisplay();
+    }
+}
+
+void init() {
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glColor3f(0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-2.0, 2.0, -2.0, 2.0); // 좌표계를 설정
-    glMatrixMode(GL_MODELVIEW);
+    gluOrtho2D(0.0, 800.0, 0.0, 600.0);
 }
 
-// 메인 함수
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(800, 800);
-    glutCreateWindow("Spiral Squares");
-
-    initialize();
-
-    glutDisplayFunc(drawSpiralSquares);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(800, 600);
+    glutCreateWindow("Isosceles Triangle with Centroid at Mouse Position");
+    init();
+    glutDisplayFunc(display);
+    glutMouseFunc(mouse);
     glutMainLoop();
-
     return 0;
 }

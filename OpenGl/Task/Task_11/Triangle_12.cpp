@@ -1,4 +1,4 @@
-#include "Triangle.h"
+#include "Triangle_12.h"
 #include "global.h"
 
 
@@ -19,6 +19,12 @@ Triangle::Triangle(GLfloat f1, GLfloat f2, GLfloat f3, GLfloat f4, GLfloat f5, G
 		{f4,f5,f6},
 		{f7,f8,f9}
 	}
+	,_x1(f1)
+	,_y1(f2)
+	,_x2(f4)
+	,_y2(f5)
+	,_x3(f7)
+	,_y3(f8)
 	, _Colors
 	{	
 		{ Random_0_to_1f(),Random_0_to_1f() ,Random_0_to_1f()},
@@ -139,6 +145,18 @@ void Triangle::Update()
 	switch (_move)
 	{
 	case move_Default:
+	{
+		if (_TriShape[2].y <= _y1)
+		{
+			_TriShape[2].y = _y2-0.001f;
+			_TriShape[2].x = _x2;
+		}
+
+		float _move_y = (_y3 - _y1) / 50.f;
+		float _move_x = (_x2 - _x1) / 50.f;
+		_TriShape[2].y -= _move_y;
+		_TriShape[2].x += _move_x;
+	}
 		return;
 		break;
 	case move_Bounce:
@@ -299,6 +317,14 @@ void Triangle::Update()
 	0.f, 0.f, 1.0f, 0.f,
 	0.f, 0.f, 0.f,1.0f };*/
 
+}
+
+void Triangle::Change_Color(GLfloat r, GLfloat g, GLfloat b)
+{
+	for (auto& a : _Colors)
+	{
+		a = { r,g,b };
+	}
 }
 
 void Triangle::stand_shape()
@@ -551,12 +577,12 @@ Terminous_Type Triangle::check_terminous_out_width(float t)
 }
 GLfloat* Triangle::get_vertex_ptr()
 {
-	return (GLfloat*)_TriShape;
+	return (GLfloat*)_TriShape.data();
 }
 
 GLfloat* Triangle::get_color_ptr()
 {
-	return (GLfloat*)_Colors;
+	return (GLfloat*)_Colors.data();
 }
 
 void Triangle::rotate90DegreesZ()
