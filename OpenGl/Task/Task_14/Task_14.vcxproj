@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{87ce428a-b566-466f-ad14-e5b17efe0afd}</ProjectGuid>
-    <RootNamespace>Task1</RootNamespace>
+    <ProjectGuid>{a75cc492-35c2-45e5-a4dc-f39a10911eef}</ProjectGuid>
+    <RootNamespace>Task14</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -131,26 +131,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Template.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="Menu_Test.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="test.cpp" />
+    <ClInclude Include="component_14.h" />
+    <ClInclude Include="global.h" />
+    <ClInclude Include="Line_14.h" />
+    <ClInclude Include="Polygon_14.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="cube.obj">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="D4.obj">
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment.glsl" />
     <None Include="vertex.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="cube.obj">
+    <ClCompile Include="Line_14.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Polygon_14.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="pyramid.obj">
       <FileType>Document</FileType>
     </Text>
   </ItemGroup>

@@ -196,5 +196,94 @@ GLvoid Win_Resize(int w, int h)
 //
 
 
+// ****************************GLM 수학 함수****************************
+//
+// 절대값
+//genType glm::abs(genType x);
+
+// 절대반올림
+//vec4f glm::ceil(vec4f x);
+
+// 범위내 값 집게 (없으면 최대 혹은 최소 반환)
+//genType glm::clamp(genType x, genType minVal, genType maxVal);
+
+// 실수를 정수로 변환
+//int glm::floatBitsToInt(float const& v);
+
+// 절대반내림
+//vec4f glm::floor(vec4f const& x);
+
+// 외적
+//vec3f glm::cross(vec3f const& x, vec3f const& y);
+
+// 두 벡터사이의 거리
+//float glm::distance(vec4f const& p0, vec4f const& p1);
+
+// 내적
+//float glm::dot(vec4f const& x, vec4f const& y);
+
+// 벡터의 크기
+//float glm::length(vec4f const& x);
+
+// 정규화
+//vec4f glm::normalize(vec4f const& x);
+
+// 삼각함수
+//float glm::sin(float const& angle);
+//float glm::cos(float const& angle);
+//float glm::tan(float const& angle);
+//float glm::degrees(float const& radians);
+//float glm::radians(float const& degrees);
+//
+//대부분의 상태들은(라이팅, 텍스처링, 은면 제거, 안개 효과 등) 디폴트로 비활성화(disable)되어 있다.
+//상태를 활성화(켜거나)하거나 비활성화(끄는)하는 명령어
+//void glEnable(GLenum cap);
+//지정한 기능을 활성화한다.
+//void glDisable(GLenum cap);
+//지정한 기능을 비활성화 한다.
+//활성화 여부를 체크하는 명령어
+//GLboolean glIsEnabled(GLenum cap);
+//cap :
+//GL_BLEND : 픽셀 블렌딩 연산을 수행(glBlendFunc)
+//GL_CULL_FACE : 앞면 혹은 뒷면을 향하는 폴리곤을 선별(glCullFace) --------------컬링
+//GL_DEPTH_TEST : 깊이를 비교
+//GL_DITHER : 컬러의 디더링 수행
+//GL_LINE_SMOOTH : 선의 안티알리아싱 효과
+//GL_STENCIL_TEST : 스텐실 테스트
+//GL_LINE_SMOOTH, GL_POLYGON_SMOOTH : 선, 면 안티앨리어싱
+
+//void glFrontFace (glenum mode);
+// 폴리곤의 어느 면이 앞면, 뒷면인지 정의
+// GL_CW - 시계방향으로 정렬된 정점들을 앞면으로
+// GL_CCW - 반시계
+
+
+//응용 프로그램에서 깊이 검사(depth test)를 설정한다.
+//윈도우 초기화 시 깊이 검사 모드 설정
+//glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+//깊이 버퍼를 클리어한다
+//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//깊이 검사를 설정 :
+//glEnable(GL_DEPTH_TEST);
+//깊이 검사를 해제 :
+//glDisable(GL_DEPTH_TEST);
+
+
+//사용 예)
+//void main(int argc, char** argv)
+//{
+//	glutInit(&argc, argv);
+//	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH); //--- 깊이 검사 모드도 같이 설정
+//	…
+//		glEnable(GL_DEPTH_TEST); //--- 상태 설정은 필요한 곳에서 하면 된다.
+//}
+//void drawScene()
+//{
+//	glClearColor(0.0, 0.0, 0.0, 1.0f);
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //--- 깊이 버퍼를 클리어한다.
+//	…
+//}
+
+
 
 

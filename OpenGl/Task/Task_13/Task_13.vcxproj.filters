@@ -15,30 +15,38 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Template.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Menu_Test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="Line_13.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Polygon_13.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragment.glsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="vertex.glsl">
-      <Filter>리소스 파일</Filter>
-    </None>
+    <ClInclude Include="component_13.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon_13.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Line_13.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="cube.obj">
-      <Filter>리소스 파일</Filter>
+    <None Include="fragment.glsl" />
+    <None Include="vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="cube.obj" />
+    <Text Include="D4.obj">
+      <Filter>헤더 파일</Filter>
     </Text>
   </ItemGroup>
 </Project>
