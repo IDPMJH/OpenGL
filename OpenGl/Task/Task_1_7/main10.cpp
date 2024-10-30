@@ -107,6 +107,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glLineWidth(2);
 	glPointSize(2);
 
+	
+
 
 
 	// 윈도우 크기가 변경될 때 취할 동작 지정
@@ -144,10 +146,13 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 
 	glUseProgram(shaderProgramID);
 
-
+	
 	GLint location = glGetUniformLocation(shaderProgramID, "ModelMatrix");
 	mat4 modelt = mat4(1.f);
+	modelt = glm::rotate(modelt, radians(45.f), glm::vec3(1.f, 1.f, 0.f));
+
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(modelt));
+
 
 	for (size_t i = 0; i < Lines.size(); i++)
 	{

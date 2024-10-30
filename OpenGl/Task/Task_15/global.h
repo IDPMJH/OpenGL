@@ -108,7 +108,49 @@ public:
     }
 };
 
-Model model;
+
+class Model_Object
+{
+public:
+    Model_Object() 
+        : _trs(mat4(1.f))
+        ,_rot(mat4(1.f))
+        ,_scale(mat4(1.f))
+        ,_FT(mat4(1.f))
+            {
+            };
+    ~Model_Object() {};
+public:
+    Model* _model_p;
+    mat4 _trs;
+    mat4 _rot;
+    mat4 _scale;
+    mat4 _FT;
+};
+
+
+class GLU_Object
+{
+public:
+    GLU_Object()
+        : _trs(mat4(1.f))
+        , _rot(mat4(1.f))
+        , _scale(mat4(1.f))
+        , _FT(mat4(1.f))
+    {
+    };
+    ~GLU_Object() {};
+
+public:
+    GLUquadricObj* _qobj;
+    mat4 _trs;
+    mat4 _rot;
+    mat4 _scale;
+    mat4 _FT;
+};
+
+
+
 
 void read_newline(std::string& str) {
     if (!str.empty() && str.back() == '\n') {

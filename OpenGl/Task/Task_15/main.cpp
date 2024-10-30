@@ -1,8 +1,8 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include "global.h"
-#include "Polygon_14.h"
-#include "Line_14.h"
-#include "component_14.h"
+#include "Polygon_15.h"
+#include "Line_15.h"
+#include "component_15.h"
 
 
 
@@ -52,6 +52,7 @@ bool on_mouse = true;
 bool _draws_of_all = true;
 bool _on_depth_test = true;
 bool _on_culling = true;
+bool _on_revolving = false;
 
 float theta = 0.f;
 
@@ -76,7 +77,10 @@ vector<vec3> Tri =
 
 
 vector<class::Polygon*> vpolygons;
-
+GLUquadricObj* qobj;
+Model_Object mobj;
+GLU_Object gobj;
+Model model;
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 { //--- 윈도우 생성하기
 {
@@ -84,7 +88,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 100); // 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
-	int i = glutCreateWindow("Task_14"); // 윈도우 생성 (윈도우 이름)
+	int i = glutCreateWindow("Task_15"); // 윈도우 생성 (윈도우 이름)
 
 	// 윈도우 파괴
 	//void glutDestroyWindow(int winID);
@@ -126,24 +130,29 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 
 	class::Polygon* lx = new Line(-1.f, 0.f, 0.f, 1.f, 0.f, 0);
 	class::Polygon* ly = new Line(0.f, 1.f, 0.f, 0.f, -1.f, 0);
+	class::Polygon* lz = new Line(0.f, 0.f, -1.f, 0.f, 0.f, 1.f);
 	vpolygons.emplace_back(lx);
 	vpolygons.emplace_back(ly);
-
-	make_shaderProgram();
+	vpolygons.emplace_back(lz);
 	read_obj_file("cube.obj", model);
 	model._type = Type_cube;
+	mobj._model_p = &model;
+	gobj._qobj = qobj;
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	make_shaderProgram();
 
 	InitBuffer();
 	glLineWidth(2);
 	glPointSize(2);
 	
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
 	//glEnable(GL_POLYGON_SMOOTH);
 	//glEnable(GL_LINE_SMOOTH);
 	
-
+	
 
 
 
@@ -157,15 +166,14 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	메인 함수는 최소한 한번의 glutMainLoop함수를 호출해야한다.*/
 	glutPostRedisplay();
 	//void glutLeaveMainLoop(); - 이벤트 프로세싱(프로그램 종료)
-	glutTimerFunc(10, UserTimerFunc, 1);
+	//glutTimerFunc(10, UserTimerFunc, 1);
 }
 
 
-GLUquadricObj* qobj;
 
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 {
-	glClearColor(1.f, 1.f, 1.f, 1.0f);
+	glClearColor(1.f, 1.f, 1.f, 0.0f);
 	/*r, g, b: red, green, blue 값
 	a : alpha 값(1.0값으로 고정)*/
 	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
@@ -176,8 +184,6 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	스텐실 버퍼 : GL_STENCIL_BUFFER_BIT*/
 
 	// 그리기 부분 구현: 그리기 관련 부분이 여기에 포함된다.
-
-
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
@@ -186,12 +192,24 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 
 	mat4 fundT = mat4(1.f);
 	glm::mat4 modelT = glm::mat4(1.0f);
+	glm::mat4 trsT = glm::mat4(1.0f);
+	
+
+
 	glm::mat4 viewT = glm::mat4(1.0f);// glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
 	glm::mat4 projectionT = glm::mat4(1.0f); //glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-	
-	modelT= glm::rotate(modelT, radians(30.f), vec3(1.f, -1.f, 0.f)); // x축, -y축 기준으로 회전
-	
-	if(on_timer == true)
+
+	fundT = glm::rotate(modelT, radians(30.f), vec3(1.f, -1.f, 0.f)); // x축, -y축 기준으로 회전
+
+
+	// 신축
+	mobj._scale = glm::scale(mat4(1.f), vec3(0.5f, 0.5f, 0.5f));
+
+	mobj._rot = glm::rotate(mat4(1.f), radians(30.f), vec3(1.f, -1.f, 0.f)); // x축, -y축 기준으로 회전
+	gobj._rot = glm::rotate(mat4(1.f), radians(30.f), vec3(1.f, -1.f, 0.f)); // x축, -y축 기준으로 회전
+
+
+	if (on_timer == true)
 	{
 		switch (rtype)
 		{
@@ -215,7 +233,6 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 			break;
 		}
 	}
-	modelT = translatT * rotateT * modelT;
 
 
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
@@ -226,96 +243,58 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
 
 
-	//GLint location = glGetUniformLocation(shaderProgramID, "ModelMatrix");
-	//mat4 modelt = mat4(1.f);
-	////glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(modelt));
-	//model;
+	
 
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
+
 	size_t i;
 	for (i = 0; i < vpolygons.size(); i++)
 	{
 		glBindVertexArray(VAO[i]);
 		vpolygons[i]->Draw_Polygon();
 	}
-
-
-
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelT));
 	glBindVertexArray(VAO[i]);
+
+
+
+	// 모델 관련========
+	mobj._trs = glm::translate(mat4(1.f), vec3(-1.f, 0.f, 0.f));
+	mobj._rot = mobj._rot * rotateT;
+	if(_on_revolving == true)
+		mobj._FT = mobj._scale * mobj._rot * mobj._trs;
+	else
+		mobj._FT = mobj._scale * mobj._trs * mobj._rot;
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(mobj._FT));
 	glDrawElements(GL_TRIANGLES, model.faces.size() * 3, GL_UNSIGNED_INT, 0);
 
 
 
-//	glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT, 0);
 
+	// glu 관련========
+	gobj._trs = glm::translate(mat4(1.f), vec3(0.5f, 0.f, 0.f));
+	gobj._rot = gobj._rot * rotateT;
+	if(_on_revolving == true)
+		gobj._FT = gobj._scale * gobj._rot * gobj._trs;
+	else
+		gobj._FT = gobj._scale * gobj._trs * gobj._rot;
 
-	/*glBindVertexArray(vaol[0]);
-	lx.Draw_Polygon();
-	glBindVertexArray(vaol[1]);
-	ly.Draw_Polygon();*/
-	//--- 사용할 VAO 불러오기
-	//glBindVertexArray(vao[1]);
-	//// 그리기
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(gobj._FT));
+	qobj = gluNewQuadric();
 
-	//void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-	/*바인드 한 배열 데이터로부터 프리미티브 렌더링 하기
-	 mode : 렌더링 할 프리미티브의 종류
-		 -점:GL_POINTS,
-		 -선:
-		 GL_LINE_STRIP,		1 - 2 - 3 - 4 인덱스 전부 연결
-		 GL_LINE_LOOP,		[1] - 2 - 3 - 4 - [1] 끝이 이어지게 루프로 연결
-		 GL_LINES			1 - 2번인덱스, 3 - 4번인덱스 등등 따로 연결
-		 -삼각형:
-		 GL_TRIANGLE_STRIP	이어지는 삼각형 ex)삼각형 두 개로 만드는 사각형 등
-		 GL_TRIANGLE_FAN	부채꼴로 이어지는 삼각형
-		 GL_TRIANGLES 등		기본 삼각형
-	 first : 배열에서 도형의 시작 인덱스
-	 count : 렌더링 할 인덱스 개수
-	 프리미티브(primitive) : 오픈지엘 렌더링의 기본 단위로 이용 가능한 가장 단순한 요소  점, 선, 삼각형*/
+	gluQuadricDrawStyle(qobj, GLU_LINE);
+	glColor3f(0.5f, 0.5f, 1.f);
+	if (model._type == Type_cube)
+		gluSphere(qobj, 0.2, 8, 8);
+	else if (model._type == Type_pyramid)
+		gluCylinder(qobj, 0.2f, 0.2f, 0.5, 10, 8);
+	gluDeleteQuadric(qobj);
 
-	 /*	GL에서 그리기
-		 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
-		  배열 데이터로부터 프리미티브 렌더링 하기, 배열 데이터의 인덱스를 사용
-		 mode : 렌더링 할 프리미티브의 종류
-		 GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES 등
-		 count : 렌더링할 요소의 개수
-		 type : indices 값의 타입
-		 GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, 또는 GL_UNSIGNED_INT
-		 indices : 바인딩 되는 버퍼의 데이터 저장소에 있는 배열의 첫 번째 인덱스 오프셋*/
+	glFlush();
 
-		 //기본 속성 바꾸기
-		 /*점 크기 설정
-			 void glPointSize(GLfloat size);
-			 size : 점의 크기(초기값 : 1)
-
-		 선의 굵기 조정
-			 void glLineWidth(GLfloat width);
-			 width : 선의 굵기(초기값 : 1)
-
-		 폴리곤 모드 설정
-			 void glPolygonMode(GLenum face, GLenum mode);
-			 face : 모드를 설정할 면(GL_FRONT_AND_BACK)
-			 mode : 모드
-			 GL_POINT, GL_LINE, GL_FILL*/
 
 	glutSwapBuffers(); //--- 화면에 출력하기
 
-
-	//glutSwapBuffers(); // 화면에 출력하기 - 더블버퍼이므로 glFlush대신 실행
-	/*그리기를 실행하는 동시에 화면에 나타나지 않는 버퍼(off screen)에 렌더링을 할 수 있다.
-	스왑(swap) 명령으로 버퍼에 렌더링한 그림을 스크린 상에 즉시 나타낼 수 있다.
-
-	더블 버퍼 사용
-	시간이 오래 걸리는 복잡한 그림을 그린 후 완성된 그림을 화면에 보여줄 수 있다.
-	애니메이션에서 사용할 수 있다.
-
-	사용 방법
-	메인 함수: 출력 모드를 더블 버퍼링을 위해 설정한다.
-	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB); //--- 출력 모드를 더블 타입으로 설정
-	그리기 콜백 함수: 드로잉 명령을 실행하고 버퍼 교체를 설정한다.
-	glutSwapBuffers (); */
 }
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수 {
@@ -366,9 +345,14 @@ GLvoid Mouse(int button, int state, int x, int y)
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
-	model._face_on_2 = 10;
 	switch (key)
 	{
+	case 'w':
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		break;
+	case 'W':
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		break;
 	case 'h':
 		if (_on_depth_test == true)
 		{
@@ -381,17 +365,13 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			_on_depth_test = true;
 		}
 		break;
-	case 'w':
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		break;
-	case 'W':
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		break;
 	case 'x':
 		if(on_timer == false)
 		{
 			on_timer = true;
+			_on_revolving = false;
 			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
 			rtype = Rotate_x_p;
 		}
 		else if (on_timer == true)
@@ -403,7 +383,9 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		if (on_timer == false)
 		{
 			on_timer = true;
+			_on_revolving = false;
 			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
 			rtype = Rotate_x_m;
 		}
 		else if (on_timer == true)
@@ -415,7 +397,9 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		if (on_timer == false)
 		{
 			on_timer = true;
+			_on_revolving = false;
 			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
 			rtype = Rotate_y_p;
 		}
 		else if (on_timer == true)
@@ -427,7 +411,9 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		if (on_timer == false)
 		{
 			on_timer = true;
+			_on_revolving = false;
 			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
 			rtype = Rotate_y_m;
 		}
 		else if (on_timer == true)
@@ -435,27 +421,57 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 			on_timer = false;
 		}
 		break;
-	case 'p':
-		if (model._type != Type_pyramid)
+	case 'r':
+		if (on_timer == false)
 		{
-			model.vertices.clear();
-			model.faces.clear();
-			read_obj_file("pyramid.obj", model);
-			model._type = Type_pyramid;
+			on_timer = true;
+			_on_revolving = true;
+			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
+			rtype = Rotate_y_p;
+		}
+		else if (on_timer == true)
+		{
+			on_timer = false;
+			_on_revolving = false;
+		}
+		break;
+	case 'R':
+		if (on_timer == false)
+		{
+			on_timer = true;
+			_on_revolving = true;
+
+			glutTimerFunc(10, UserTimerFunc, 1);
+			rotateT = mat4(1.f);
+			rtype = Rotate_y_m;
+		}
+		else if (on_timer == true)
+		{
+			on_timer = false;
+			_on_revolving = false;
 		}
 		break;
 	case 'c':
-		if(model._type != Type_cube)
+		if (model._type != Type_cube)
 		{
 			model.vertices.clear();
 			model.faces.clear();
 			read_obj_file("cube.obj", model);
 			model._type = Type_cube;
 		}
+		else if (model._type != Type_pyramid)
+		{
+			model.vertices.clear();
+			model.faces.clear();
+			read_obj_file("pyramid.obj", model);
+			model._type = Type_pyramid;
+		}
 
 		break;
 	case 's':
 		on_timer = false;
+		_on_revolving = false;
 		rotateT = mat4(1.f);
 		translatT = mat4(1.f);
 		break;
@@ -470,26 +486,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 
 GLvoid sp_Keyboard(int key, int x, int y)
 {
-	switch (key)
-	{
-	case GLUT_KEY_LEFT:
-		translatT = glm::translate(translatT, vec3(-0.05f, 0.f, 0.f));
-		break;
-	case GLUT_KEY_RIGHT:
-		translatT = glm::translate(translatT, vec3(0.05f, 0.f, 0.f));
-		break;
-	case GLUT_KEY_UP:
-		translatT = glm::translate(translatT, vec3(0.f, 0.05f, 0.f));
-
-		break;
-	case GLUT_KEY_DOWN:
-		translatT = glm::translate(translatT, vec3(0.f, -0.05f, 0.f));
-		break;
-	default:
-		break;
-	}
-	InitBuffer();
-	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
 
 
@@ -645,7 +641,6 @@ int check_quad(float xpos, float ypos)
 void UserTimerFunc(int value)
 {
 	
-
 	glutPostRedisplay();
 	if (on_timer)
 		glutTimerFunc(10, UserTimerFunc, 1);
