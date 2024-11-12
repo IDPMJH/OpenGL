@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="header">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="other">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="EasyFreeGLUTShapesDrawer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Segment.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Point.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Line.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Triangle.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleStrip.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleFan.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Quad.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="BitmapHandler.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="EasyFreeGLUTShapesDrawer.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Segment.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Point.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Triangle.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleStrip.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleFan.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawableObject.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformableObject.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="BitmapHandler.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="TexturableObject.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="PresentationClass.h">
+      <Filter>header</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

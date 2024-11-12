@@ -311,6 +311,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	gluDeleteQuadric(qobj);
 
 	glFlush();
+	
 
 
 	glutSwapBuffers(); //--- 화면에 출력하기

@@ -1,0 +1,103 @@
+#include <Windows.h>
+#include <timeapi.h>
+#include "Game.h"
+#include "global.h"
+
+
+Game::Game() 
+    :_CurCount{}
+	, _Frequency{}
+	, _PrevCount{}
+	, _dDT(0.0)
+	, _dAcc(0.0)
+	, _iCallCount(0)
+	, _iFPS(0)
+    // Constructor implementation
+{
+}
+
+Game::~Game() {
+    // Destructor implementation
+}
+
+HRESULT Game::Initialize()
+{
+	// Initialize method implementation
+	// 프레임 제어
+    // 현재 카운트
+	QueryPerformanceCounter(&_CurCount);
+    // 초당 카운트 횟수 (초당 카운트 차이 값)
+	QueryPerformanceFrequency(&_Frequency);
+
+    return S_OK;
+}
+
+void Game::Run() {
+    // Run method implementation
+}
+
+
+float lastTime = (float)timeGetTime();
+float timeDelta = 0.0f;
+
+void Game::Update() {
+    
+    // 시간 갱신
+    // 현재 카운트 값
+    QueryPerformanceCounter(&_CurCount);
+
+    // 이전 프레임의 카운팅과 현재 프레임 카운팅 값의 차이를 구한다. 이를 초당 카운트 횟수로 나눈다 -> 프레임카운트당 시간이 나온다
+    _dDT = (double)(_CurCount.QuadPart - _PrevCount.QuadPart) / (double)(_Frequency.QuadPart);
+	
+    // 이전 프레임카운트 값 현재 프레임카운트값으로 갱신 (다음 계산을 위해)
+    _PrevCount = _CurCount;
+ 
+
+}
+
+HRESULT Game::Destroy()
+{
+    return E_NOTIMPL;
+}
+
+
+int timecount = 0;
+DWORD c_time;
+int FrameCount = 0;
+
+void Game::Render() {
+    // Render method implementation
+    // 프레임률 제어
+ //   if (timecount == 0)
+ //   {
+	//	ctime = timeGetTime();
+ //       timecount++;
+ //   }
+
+ //   // 현재 시간과 처음 받아온 시간 비교
+ //   // 60프레임보다 크면 렌더, 타임을 다시 받아옴
+	//if (ctime + (1000 / 90) <= timeGetTime())
+	//{
+	//	// 렌더링
+ //      FrameCount++;
+ //      glutPostRedisplay();
+ //      timecount = 0;
+	//}
+
+}
+
+void Game::HandleInput() {
+    // HandleInput method implementation
+}
+
+void Game::LoadContent() {
+    // LoadContent method implementation
+}
+
+void Game::UnloadContent() {
+    // UnloadContent method implementation
+}
+
+void Game::Exit() {
+    // Exit method implementation
+}
