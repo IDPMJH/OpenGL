@@ -14,14 +14,16 @@
 
 
 
-
+using glm::vec2;
+using glm::vec3;
+using glm::mat4;
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
 GLvoid Update();
-
+GLvoid Mouse_Down_Move(int x, int y);
 
 void make_shaderProgram();
 void InitBuffer();
@@ -80,6 +82,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutIdleFunc(Update);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
+	glutMotionFunc(Mouse_Down_Move);	// 마우스 누른 채로 이동할 때 호출 될 함수
+
 
 	
 	core.Initialize();
@@ -99,6 +103,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	//void glutLeaveMainLoop(); - 이벤트 프로세싱(프로그램 종료)
 }
 
+
+// Idle function 
 GLvoid Update()
 {
 	core.Update();
@@ -142,6 +148,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 		glBindVertexArray(vao[i]);
 		core._polygons[i]->Draw_Polygon();
 	}
+
 	//--- 사용할 VAO 불러오기
 	//glBindVertexArray(vao[1]);
 	//// 그리기
@@ -217,6 +224,9 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 static polygon_type draw_mode;
 
 
+
+bool on_click = false;
+
 GLvoid Mouse(int button, int state, int x, int y)
 {
 	float xpos = x;
@@ -228,6 +238,7 @@ GLvoid Mouse(int button, int state, int x, int y)
 	pre_ypos = ypos;
 	vPos<float> eraser_pos(xpos, ypos);
 	*/
+	vec3 start(xpos, ypos,0.f);
 
 	switch (button)
 	{
@@ -237,16 +248,121 @@ GLvoid Mouse(int button, int state, int x, int y)
 		// 눌렀을 때
 		if (state == GLUT_DOWN)
 		{
-
+			on_click = true;
+			Line* sliceline = new Line(start, start); // 시작점 기준으로 만듦
+			core._polygons.emplace_back(sliceline);
+			
 		}
-		else	// 떼었을 때
+		else	// if up key, delete line
 		{
-
+			on_click = false;
+			auto it = find_if(core._polygons.begin(), core._polygons.end(), [](class::Polygon* p) {return p->_type == mode_Line; });
+			if (it != core._polygons.end())
+			{
+				core._polygons.erase(it);
+			}
 		}
 	}
 	break;
 	}
 	InitBuffer();
+	glutPostRedisplay();
+}
+
+static float pre_xpos = 0;
+static float pre_ypos = 0;
+
+GLvoid Mouse_Down_Move(int x, int y)
+{
+	if (on_click == false)
+		return;
+	// 마우스 좌표 변환
+	float cur_xpos = x;
+	float cur_ypos = y;
+	Mouse_Convert_Win_To_OpenGL(cur_xpos, cur_ypos, window_x, window_y);
+
+
+	float x_offset = cur_xpos - pre_xpos;
+	float y_offset = cur_ypos - pre_ypos;
+
+
+	// 이동한 차이
+	vec3 offset (x_offset, y_offset,0.f);
+	
+	// find line in core.polygons
+	auto it = find_if(core._polygons.begin(), core._polygons.end(), [](class::Polygon* p) {return p->_type == mode_Line; });
+
+	if (it == core._polygons.end())
+		return;
+
+	Line* ptemp = dynamic_cast<Line*>(*it);
+
+	ptemp->Update(offset);
+	ptemp->Merge_Check(v_rc, ptemp);
+	vPos<float> temp_center = ptemp->_center;
+	float temp_width = ptemp->_width;
+	float temp_height = ptemp->_height;
+	float temp_r = ptemp->_r;
+	float temp_g = ptemp->_g;
+	float temp_b = ptemp->_b;
+	//for (auto rc = v_rc.begin(); rc != v_rc.end(); ++rc)
+	//{
+	//	if (rc->_clicked == true)
+	//		rc->Merge_Check(v_rc);
+	//}
+	// 초기화 할 값
+	float min_width = 1.f, min_height = 1.f;
+	float max_width = 0.f, max_height = 0.f;
+	float merge_count = 0.f;
+	vPos<float> center(0.f, 0.f);
+	for (auto it = v_rc.begin(); it != v_rc.end();)
+	{
+		if (it->_merged == true)
+		{
+			++merge_count;
+			if (min_width > it->_width)
+				min_width = it->_width;
+			if (min_height > it->_height)
+				min_height = it->_height;
+			if (max_width < it->_width)
+				max_width = it->_width;
+			if (max_height < it->_height)
+				max_height = it->_height;
+			center = center + (it->_center);
+			it = v_rc.erase(it);
+		}
+		else
+			++it;
+	}
+	if (merge_count != 0)
+	{
+		center._x = center._x / merge_count;
+		center._y = center._y / merge_count;
+
+		Rect temp(temp_center, temp_width + 0.02f, temp_height + 0.02f);
+		temp._r = temp_r;
+		temp._g = temp_g;
+		temp._b = temp_b;
+		v_rc.emplace_back(temp);
+	}
+	/*for (auto ite = v_rc.begin(); ite != v_rc.end();)
+	{
+		if (ite->_merged == true)
+		{
+			std::cout << "Erasing: " << ite->_width << " x " << ite->_height << std::endl;
+			ite = v_rc.erase(ite);
+		}
+		else
+		{
+			++ite;
+		}
+	}
+	std::cout << "v_rc size after erase: " << v_rc.size() << std::endl;*/
+
+
+
+	pre_xpos = cur_xpos;
+	pre_ypos = cur_ypos;
 	glutPostRedisplay();
 }
 GLvoid Keyboard(unsigned char key, int x, int y)

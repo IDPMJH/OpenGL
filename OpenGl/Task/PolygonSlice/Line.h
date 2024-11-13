@@ -2,9 +2,6 @@
 #include <vector>
 
 #include "Polygon.h"
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 using std::vector;
 

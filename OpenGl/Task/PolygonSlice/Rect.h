@@ -1,5 +1,6 @@
 #pragma once
 #include "Polygon.h"
+
 class Rect_p : public Polygon
 {
 public:

@@ -1,8 +1,11 @@
 #include <Windows.h>
 #include <timeapi.h>
+#include <iostream>
 #include "Game.h"
 #include "global.h"
-#include <iostream>
+#include "Polygon.h"
+#include "Line.h"
+
 
 using namespace std;
 

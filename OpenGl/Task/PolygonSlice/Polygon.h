@@ -1,8 +1,13 @@
 #pragma once
 
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 using GLfloat = float;
 using GLuint = unsigned int;
 
+using glm::mat4;
 
 enum polygon_type
 {
@@ -43,6 +48,9 @@ public:
 	polygon_type _type;
 	move_Mode _move;
 	bool _dead;
-
+	mat4 _model;
+	mat4 _rotate;
+	mat4 _translate;
+	mat4 _scale;
 };
 

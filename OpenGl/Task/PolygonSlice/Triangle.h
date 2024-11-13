@@ -2,9 +2,6 @@
 #include "Polygon.h"
 #include "ogldev_math_3d.h"
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 
 class Matrix4f;

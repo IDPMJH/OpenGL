@@ -3,6 +3,7 @@
 
 using std::vector;
 class Polygon;
+class Line;
 
 class Game
 {
@@ -21,6 +22,7 @@ public:
 
 public:
 	vector<class::Polygon*> _polygons;
+	Line* _line;
 	LARGE_INTEGER	_CurCount;		// 현재 카운트
 	LARGE_INTEGER	_PrevCount;		// 이전 카운트
 	LARGE_INTEGER	_Frequency;		// 초당 카운트 횟수
