@@ -26,7 +26,9 @@ public:
 	LARGE_INTEGER	_Frequency;		// 초당 카운트 횟수
 	double			_dDT;			// (FPS의 역수=), 1 프레임당 시간	(Delta Time), 프레임 사이의 시간값
 	double			_dAcc;			// 1초 체크를 위한 누적시간
-	UINT			_iCallCount;	// 함수 호출 횟수 
+	UINT			_CallCount;	// 함수 호출 횟수 
 	UINT			_iFPS;			// 초당 함수 호출 횟수
+	int				_Score;
+
 };
 

@@ -2,6 +2,10 @@
 #include <timeapi.h>
 #include "Game.h"
 #include "global.h"
+#include <iostream>
+
+using namespace std;
+
 
 
 Game::Game() 
@@ -10,7 +14,7 @@ Game::Game()
 	, _PrevCount{}
 	, _dDT(0.0)
 	, _dAcc(0.0)
-	, _iCallCount(0)
+	, _CallCount(0)
 	, _iFPS(0)
     // Constructor implementation
 {
@@ -42,6 +46,7 @@ float timeDelta = 0.0f;
 
 void Game::Update() {
     
+	// Update method implementation
     // 시간 갱신
     // 현재 카운트 값
     QueryPerformanceCounter(&_CurCount);
@@ -51,6 +56,23 @@ void Game::Update() {
 	
     // 이전 프레임카운트 값 현재 프레임카운트값으로 갱신 (다음 계산을 위해)
     _PrevCount = _CurCount;
+
+
+	//	++_CallCount;
+
+	//_dAcc += _dDT;	// DT 누적
+
+	//if (_dAcc >= 1.) // 1초에 한번(m_dAcc에 누적 된 값이 1초가 넘어가면)
+	//{
+	//	_dAcc = 0.;
+	//	_iFPS = _CallCount;
+	//	_CallCount = 0;
+
+	//	wchar_t szBuffer[255] = {};
+	//	swprintf_s(szBuffer, L"FPS : %d, DT : %f", _iFPS, _dDT);
+	//	cout << _iFPS << endl;
+	//}
+    
  
 
 }
@@ -60,10 +82,6 @@ HRESULT Game::Destroy()
     return E_NOTIMPL;
 }
 
-
-int timecount = 0;
-DWORD c_time;
-int FrameCount = 0;
 
 void Game::Render() {
     // Render method implementation
@@ -83,6 +101,8 @@ void Game::Render() {
  //      glutPostRedisplay();
  //      timecount = 0;
 	//}
+	// 
+	// 호출 횟수 증가
 
 }
 

@@ -108,7 +108,7 @@ GLvoid Update()
 
 
 GLuint vao[10], vbo[4];
-vector<class::Polygon*> polygons;
+
 
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 {
@@ -137,10 +137,10 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	mat4 modelt = mat4(1.f);
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(modelt));
 
-	for (size_t i = 0; i < polygons.size(); i++)
+	for (size_t i = 0; i < core._polygons.size(); i++)
 	{
 		glBindVertexArray(vao[i]);
-		polygons[i]->Draw_Polygon();
+		core._polygons[i]->Draw_Polygon();
 	}
 	//--- 사용할 VAO 불러오기
 	//glBindVertexArray(vao[1]);
@@ -219,9 +219,6 @@ static polygon_type draw_mode;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
-	if (polygons.size() >= 10)
-		return;
-
 	float xpos = x;
 	float ypos = y;
 
@@ -236,45 +233,18 @@ GLvoid Mouse(int button, int state, int x, int y)
 	{
 	case GLUT_LEFT_BUTTON: // 사각형 내부 - 색상 랜덤, 사각형 외부 - 배경색 랜덤
 	{
+
+		// 눌렀을 때
 		if (state == GLUT_DOWN)
 		{
-			switch (draw_mode)
-			{
-			case mode_Default:
-				break;
-			case mode_Point:
-			{
-				class::Polygon* temp = new Dot(xpos,ypos,0.f);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_Line:
-			{
-				class::Polygon* temp = new Line(xpos - 0.1f, ypos, 0.f, xpos + 0.1f, ypos, 0);
-				
-				polygons.emplace_back(temp);
 
-			}
-				break;
-			case mode_Triangle:
-			{
-				class::Polygon* temp = new Triangle(xpos - 0.1f, ypos - 0.1f, 0.f, xpos, ypos+0.1f, 0,xpos + 0.1f, ypos - 0.1f, 0);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_Rect:
-			{
-				class::Polygon* temp = new Rect_p(xpos,ypos,0.1f);
-				polygons.emplace_back(temp);
-			}
-				break;
-			case mode_End:
-				break;
-			default:
-				break;
-			}
+		}
+		else	// 떼었을 때
+		{
+
 		}
 	}
+	break;
 	}
 	InitBuffer();
 	glutPostRedisplay();
@@ -293,32 +263,23 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	// 명령어를 선택할 때마다 다른 도형이 선택되어 이동된다.
 	//	c : 모든 도형을 삭제한다.
 
-	if (key == 'p')
+	if (key == 'm')
 	{
-		draw_mode = mode_Point;
+		// 도형의 모드 Line, FIll
 	}
 	else if (key == 'l')
 	{
-		draw_mode = mode_Line;
+		// 경로 출력하기 on / off
 	}
-	else if (key == 't')
+	else if (key == 'w')
 	{
-		draw_mode = mode_Triangle;
+		// 도형이 날아오는 속도 변경 ++
 	}
-	else if (key == 'r')
+	else if (key == 's')
 	{
-		draw_mode = mode_Rect;
+		// 도형이 날아오는 속도 변경 --
 	}
-	else if (key == 'c')
-	{
-		polygons.clear();
-	}
-	else if (key == 'w' || key == 'a' || key == 's' || key == 'd')
-	{
-		if (polygons.empty())
-			return;
-		polygons[Random_Number<int>(1, polygons.size())-1]->move_On_dir(key);
-	}
+	
 	InitBuffer();
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
@@ -327,10 +288,10 @@ void InitBuffer()
 {
 	glGenVertexArrays(10, vao); //--- VAO 를 지정하고 할당하기
 
-	for (size_t i = 0; i < polygons.size(); i++)
+	for (size_t i = 0; i < core._polygons.size(); i++)
 	{
 		glBindVertexArray(vao[i]); //--- VAO를 바인드하기
-		polygons[i]->init_buffer_polygon(vao, vbo);
+		core._polygons[i]->init_buffer_polygon(vao, vbo);
 	}
 
 	//glBindVertexArray(vao[0]); //--- VAO를 바인드하기
