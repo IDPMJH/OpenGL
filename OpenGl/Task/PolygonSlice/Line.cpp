@@ -38,6 +38,20 @@ Line::Line(GLfloat x, GLfloat y)
 {
 }
 
+Line::Line(glm::vec3 p1, glm::vec3 p2)
+	:Polygon(mode_Line)
+{
+	_lineshape.push_back(p1);
+	_lineshape.push_back(p2);
+	_size = 2;
+	_radius = 0.0f;
+	_theta = 0.0f;
+	_mouse_x = 0.0f;
+	_mouse_y = 0.0f;
+	_linemode = false;
+	
+}
+
 Line::~Line()
 {
 }
@@ -108,8 +122,12 @@ void Line::init_buffer_polygon(GLuint* vao, GLuint* vbo)
 	glEnableVertexAttribArray(1);
 }
 
-void Line::Update()
+void Line::Update(glm::vec3 offset)
 {
+	// second vertex + offset
+	_lineshape[1][0] += offset.x;
+	_lineshape[1][1] += offset.y;
+	_lineshape[1][2] += offset.z;
 }
 
 GLfloat* Line::get_vertex_ptr()

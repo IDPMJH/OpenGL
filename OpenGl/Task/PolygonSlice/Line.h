@@ -13,12 +13,13 @@ public:
 	Line();
 	Line(GLfloat f1, GLfloat f2, GLfloat f3, GLfloat f4, GLfloat f5, GLfloat f6);
 	Line(GLfloat x, GLfloat y);
+	Line(glm::vec3 p1, glm::vec3 p2);
 	~Line();
 public:
 	virtual void move_On_dir(char dir);
 	virtual void Draw_Polygon();
 	virtual void init_buffer_polygon(GLuint* vao, GLuint* vbo);
-	virtual void Update();
+	virtual void Update(glm::vec3 offset);
 	GLfloat* get_vertex_ptr();
 	GLfloat* get_color_ptr();
 	void init_line(bool ccwon);
