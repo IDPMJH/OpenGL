@@ -75,7 +75,7 @@ public:
 
 
 		// ¸ðµç¸é
-		/*for (const auto& face : model.faces) {
+		/*for (const auto& face : pmodel_1->faces) {
 			indices.push_back(face.v1);
 			indices.push_back(face.v2);
 			indices.push_back(face.v3);
@@ -209,6 +209,7 @@ public:
 				_indices.push_back(faces[11].v3);
 			}
 		}
+
 		else if (_type == Type_d4)
 		{
 			if (_face_on_1 == 7)
