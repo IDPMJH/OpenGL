@@ -7,6 +7,7 @@
 #include "Model.h"
 #include "Rect.h"
 #include "Crane.h"
+#include "Circle.h"
 
 enum Rotate_Type
 {
@@ -53,14 +54,14 @@ GLuint vertexShader; //--- 버텍스 세이더 객체
 GLuint fragmentShader; //--- 프래그먼트 세이더 객체
 GLchar* vertexSource, * fragmentSource; //--- 소스코드 저장 변수
 
-
 bool on_timer = false;
 bool on_mouse = true;
-bool draws_of_all = true;
+bool draw_cube = true;
 bool on_depth_test = true;
 bool on_culling = true;
 bool on_revolving = false;
 bool on_perspective = true;
+bool on_light = true;
 
 float max_x = 3.f;
 float max_z = 3.f;
@@ -83,6 +84,9 @@ float cannon_theta = 0.f;
 TTM cam_rot = Mode_Default;
 float cm_rot = 0.f;
 
+TTM light_rot = Mode_Default;
+float light_theta = 0.f;
+
 
 
 float thetax = 0.f;
@@ -92,7 +96,7 @@ float thetaz = 0.f;
 
 float xoffset = 0.f;
 float yoffset = 0.f;
-float zoffset = 0.f;
+float zoffset = 4.f;
 float cm_xoffset = 0.f;
 float cm_yoffset = 0.f;
 float cm_zoffset = 0.f;
@@ -112,10 +116,14 @@ mat4 translatT = mat4(1.f);
 
 
 
-Crane* crane;
+Cube* pcube;
+Cube* plight_cube;
+Circle* pcircle;
+Pyramid* ppyramid;
 Rect_p rect;
 vector<class::Line*> Lines;
 vector<class::Polygon*> vpolygons;
+vec3 g_camerapos = vec3(0.f, 0.f, 0.f);
 
 glm::mat4 invertTranslation(const glm::mat4& matrix) {
     glm::mat4 invertedMatrix = matrix;
@@ -131,8 +139,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 100); // 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
-	int i = glutCreateWindow("Task_19"); // 윈도우 생성 (윈도우 이름)
-
+	int i = glutCreateWindow("Task_24"); // 윈도우 생성 (윈도우 이름)
 	// 윈도우 파괴
 	//void glutDestroyWindow(int winID);
 
@@ -170,16 +177,12 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	// 
     glutMouseFunc(Mouse);
 	make_shaderProgram();
-
-    crane = new Crane();
-    read_obj_file("cube.obj", crane->body);
-    read_obj_file("cube.obj", crane->cannon1);
-    read_obj_file("cube.obj", crane->cannon2);
-    read_obj_file("cube.obj", crane->frontLeg1);
-    read_obj_file("cube.obj", crane->frontLeg2);
-    read_obj_file("cube.obj", crane->head);
-
-   
+    pcube = new Cube();
+    ppyramid = new Pyramid();
+    plight_cube = new Cube();
+    pcircle = new Circle(4.f, 100, shaderProgramID);
+    read_obj_file("cube.obj", *pcube);
+    read_obj_file("cube.obj", *plight_cube);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     vpolygons.push_back(&rect);
  
@@ -225,7 +228,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	glUseProgram(shaderProgramID);
 
     // 각 행렬 초기화
-	mat4 fundT = mat4(1.f);
+    mat4 identity = mat4(1.0f);
     mat4 fRotT = mat4(1.f);
 	mat4 modelT = glm::mat4(1.0f);
 	mat4 trsT = glm::mat4(1.0f);
@@ -236,13 +239,13 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
     float radius = 5.0f;
     float camX = sin(radians(cm_rot)) * radius;
     float camZ = cos(radians(cm_rot)) * radius;
-    vec3 cameraPos = vec3(camX, 0.5f, camZ);  //--- 카메라 위치 EYE
-
+    vec3 cameraPos = vec3(camX, 0.5f, camZ + 3.f);  //--- 카메라 위치 EYE
+    g_camerapos = cameraPos;
 
     // 카메라 방향 (camerDir) 구하는 방법
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳 AT
     glm::vec3 cameraDir = glm::normalize(cameraPos - cameraTarget); //--- 카메라 방향 벡터: z축 양의 방향: 정규화(EYE - AT)
-   // cameraDir = glm::normalize(vec3(0.0f, cm_yoffset-0.1f, -1.0f));// 카메라가 바라보는 방향 (n)
+    // cameraDir = glm::normalize(vec3(0.0f, cm_yoffset-0.1f, -1.0f));// 카메라가 바라보는 방향 (n)
    
    /* 위쪽 벡터와 카메라 방향 벡터와의 외적 = > camera right벡터를 구할 수 있음
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); = UP
@@ -253,7 +256,6 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
     viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
     //glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
     
-
     // =====================Projection transformation=====================
    if(on_perspective == true)
        projectionT = glm::perspective(glm::radians(45.0f), (float)window_x / (float)window_y, 0.1f, 100.0f);
@@ -269,79 +271,79 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(identity));
 
-
-    glViewport(0, 0, 600, 600);
     glBindVertexArray(VAO[0]);
     if(vpolygons.size() > 0)
         vpolygons[0]->Draw_Polygon();
 
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
-    // ================================================뷰 2================================================
-    // =====================Projection transformation=====================
-    cameraPos = vec3(0.f, 3.f, 0.f);  //--- 카메라 위치
-    cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳
-    cameraDir = glm::normalize(cameraPos - cameraTarget); //--- 카메라 방향 벡터: z축 양의 방향: 정규화(EYE - AT)
-    cameraUp = vec3(0.0f, 0.0f, -1.f);// 카메라 공간의 위쪽 축(v)
-    viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 
-    projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-    projectionT = glm::translate(projectionT, vec3(0.f, 0.f, 0.f));
+    float base_width = 3.f;
+    float base_height = 3.f;
+    float base_depth = 3.f;
+    vec4 base_center = vec4(0.f, 0.f, 0.f, 1.f);
 
-    // 행렬 위치 받아놓음
-    modelLoc = glGetUniformLocation(shaderProgramID, "model");
-    viewLoc = glGetUniformLocation(shaderProgramID, "view");
-    projectionLoc = glGetUniformLocation(shaderProgramID, "projection");
+    mat4 model = mat4(1.0f);
+    mat4 trs = mat4(1.0f);
+    mat4 trs1 = mat4(1.0f);
+    mat4 trs2 = mat4(1.0f);
+    mat4 rot = mat4(1.0f);
+    mat4 rot2 = mat4(1.0f);
+    mat4 scale = mat4(1.0f);
+    scale = glm::scale(identity, vec3(base_width, base_height, base_depth));
+    float body_width = base_width;
+    float body_height = base_height;
+    float body_depth = base_depth;
 
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
+    model = trs * rot * scale;  // 기본 단위행렬 집합 (scale만 좀 키움)
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // ======================= Cube =======================
 
-    glViewport(600, 400, 600, 400);
-    glBindVertexArray(VAO[0]);
-    if (!vpolygons.empty())
-        vpolygons[0]->Draw_Polygon();
+    // 조명
+    vec4 light_pos = vec4(0.f, 0.f, zoffset, 1.f);
+    mat4 light_rot = glm::rotate(mat4(1.f), radians(light_theta), vec3(0.f, 1.f, 0.f));
+    vec4 fpos = light_rot * light_pos;
+    unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
+    glUniform3f(lightPosLocation, fpos.x,fpos.y,fpos.z);
 
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
 
-    // ================================================뷰 3================================================
-   // =====================Projection transformation=====================
-    cameraPos = vec3(0.f, 0.f, -3.f);  //--- 카메라 위치
-    cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳
-    cameraUp = vec3(0.0f, 1.0f, 0.f);// 카메라의 위쪽 축(v)
-    viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+    unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
+    if (on_light == true)
+        glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+    else
+        glUniform3f(lightColorLocation, 0.1, 0.1, 0.1);
+ 
+  
+    unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
+    glUniform3f(objColorLocation, 1.0, 0.2f, 0.3);
+    unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
+    glUniform3f(viewPosLocation, g_camerapos.x, g_camerapos.y, g_camerapos.z);
 
-    projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-    projectionT = glm::translate(projectionT, vec3(0.f, 0.f, 0.f));
 
-    // 행렬 위치 받아놓음
-    modelLoc = glGetUniformLocation(shaderProgramID, "model");
-    viewLoc = glGetUniformLocation(shaderProgramID, "view");
-    projectionLoc = glGetUniformLocation(shaderProgramID, "projection");
+    plight_cube->_trs = glm::translate(mat4(1.f), vec3(0.f, 0.0f, zoffset));
+    plight_cube->_rot = glm::rotate(mat4(1.f), radians(light_theta), vec3(0.f, 1.f, 0.f));
+    plight_cube->_scale = glm::scale(mat4(1.f), vec3(0.2f, 0.2f, 0.2f));
+    plight_cube->_FT = plight_cube->_rot * plight_cube->_trs * plight_cube->_scale* model;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(plight_cube->_FT));
+    plight_cube->Draw(shaderProgramID);
 
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
 
-    glViewport(600, 0, 600, 400);
-    glBindVertexArray(VAO[0]);
-    if (!vpolygons.empty())
-        vpolygons[0]->Draw_Polygon();
-
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
+    mat4 crot = glm::rotate(mat4(1.f), radians(90.f), vec3(1.f, 0.f, 0.f));
+    pcircle->setRadius(zoffset);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(crot));
+    if(pcircle != nullptr)
+        pcircle->draw();
 
 
 
+    pcube->_rot = glm::rotate(mat4(1.f), radians(m_theta), vec3(0.f, 1.f, 0.f));
+    pcube->_FT = pcube->_rot * model;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(pcube->_FT));
+    if (pcube != nullptr && draw_cube == true)
+        pcube->Draw(shaderProgramID);
+    else if (ppyramid != nullptr && draw_cube == false)
+        ppyramid->Draw(shaderProgramID);
+ 
     glutSwapBuffers(); //--- 화면에 출력하기
 }
 
@@ -393,25 +395,35 @@ GLvoid Keyboard(unsigned char key, int x, int y)
     switch (key)
     {
     case 'z':
-        cm_zoffset += 0.1f;
+        zoffset -= 0.1f;
         break;
     case 'Z':
-        cm_zoffset -= 0.1f;
+        zoffset += 0.1f;
         break;
-    case 'x':
-        cm_xoffset += 0.1f;
+    case 'n':
+        draw_cube = !draw_cube;
         break;
     case 'X':
         cm_xoffset -= 0.1f;
         break;
-    case 'y':
-        cm_yoffset += 0.1f;
+    case 'm':
+        on_light = !on_light;
         break;
     case 'Y':
         cm_yoffset -= 0.1f;
         break;
     case 'r':
-        cm_rot += 1.f;
+        if (light_rot == Mode_On)
+        {
+            light_rot = Mode_Default;
+            on_timer = false;
+        }
+        else
+        {
+            light_rot = Mode_On;
+            on_timer = true;
+            glutTimerFunc(10, UserTimerFunc, 1);
+        }
         break;
     case 'R':
         cm_rot -= 1.f;
@@ -468,7 +480,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
             glutTimerFunc(10, UserTimerFunc, 1);
         }
         break;
-    case 'm':
+    case 'y':
         if (y_rot == Mode_On)
         {
             y_rot = Mode_Default;
@@ -610,16 +622,14 @@ GLvoid sp_Keyboard(int key, int x, int y)
 
 void InitBuffer()
 {
+    glUseProgram(shaderProgramID);
 	glGenVertexArrays(10, vao1); //--- VAO 를 지정하고 할당하기
-	for (size_t i = 0; i < Lines.size(); i++)
-	{
-		glBindVertexArray(vao1[i]); //--- VAO를 바인드하기
-		Lines[i]->init_buffer_polygon(vao1, vbo);
-	}
 
 	glGenVertexArrays(10, VAO);
 	glGenBuffers(10, vbo);
 	glGenBuffers(1, &EBO);
+    
+   
 
 	/*여러 다각형이 그려지지 않는 이유는
 	glGenVertexArrays 함수가 루프 내에서
@@ -628,18 +638,27 @@ void InitBuffer()
 	그러나 이 배열은 루프가 반복될 때마다 덮어쓰여지므로,
 	마지막 다각형만이 올바르게 그려질 수 있습니다.*/
 
-	size_t i;
-    size_t j;
-	for (i = 0; i < vpolygons.size(); i++)
-	{
-		glBindVertexArray(VAO[i]); //--- VAO를 바인드하기
-		vpolygons[i]->init_buffer_polygon(VAO, vbo);
-	}
+	//size_t i;
+    //size_t j;
+	//for (i = 0; i < vpolygons.size(); i++)
+	//{
+	//	glBindVertexArray(VAO[i]); //--- VAO를 바인드하기
+	//	vpolygons[i]->init_buffer_polygon(VAO, vbo);
+	//}
+    if (plight_cube != nullptr)
+        plight_cube->model_init_buffer();
 
-    if (crane != nullptr)
+    if (pcircle != nullptr)
+        pcircle->initBuffer();
+
+    if (pcube != nullptr && draw_cube == true)
     {
-        crane->init_buffer();
+        pcube->model_init_buffer();
     }
+    else
+        ppyramid->model_init_buffer();
+
+
 }
 
 void make_shaderProgram()
@@ -885,6 +904,26 @@ void UserTimerFunc(int value)
         {
             cm_rot = 0.f;
             cam_rot = Mode_Default;
+            on_timer = false;
+        }
+    }
+    if (light_rot == Mode_On)
+    {
+        light_theta += 1.f;
+        if (light_theta >= 360.f)
+        {
+            light_theta = 0.f;
+            light_rot = Mode_Default;
+            on_timer = false;
+        }
+    }
+    else if (light_rot == Mode_Off)
+    {
+        light_theta -= 1.f;
+        if (light_theta <= -360.f)
+        {
+            light_theta = 0.f;
+            light_rot = Mode_Default;
             on_timer = false;
         }
     }

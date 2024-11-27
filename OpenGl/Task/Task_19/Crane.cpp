@@ -100,7 +100,7 @@ void Crane::Draw(GLuint shaderProgramID)
     rot2 = glm::rotate(identity, radians(cannon_theta), vec3(0.f, 0.f, 1.f));
     trs1 = glm::translate(identity, vec3(head_width/2 - cannon1_width/2, -(body_height+head_height), 0.f));
     trs2 = glm::translate(identity, vec3(-head_width / 2 + cannon1_width / 2, (body_height + head_height), 0.f));
-    model = trs *rot * scale;
+    model = rot * trs  * scale;
     model = trs2 *rot2 *trs1 * model;
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     cannon1.Draw(shaderProgramID);
@@ -116,7 +116,7 @@ void Crane::Draw(GLuint shaderProgramID)
     rot2 = glm::rotate(identity, radians(-cannon_theta), vec3(0.f, 0.f, 1.f));
     trs1 = glm::translate(identity, vec3(-head_width / 2 + cannon1_width / 2, -(body_height + head_height), 0.f));
     trs2 = glm::translate(identity, vec3(+head_width / 2 - cannon1_width / 2, (body_height + head_height), 0.f));
-    model = trs * rot * scale;
+    model = rot * trs * scale;
     model = trs2 * rot2 * trs1 * model;
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     cannon2.Draw(shaderProgramID);

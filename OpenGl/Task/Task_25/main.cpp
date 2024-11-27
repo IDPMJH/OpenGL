@@ -1,12 +1,15 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 #include "global.h"
-#include "Polygon_19.h"
-#include "Line_19.h"
-#include "component_19.h"
+#include "Polygon_18.h"
+#include "Line_18.h"
+#include "component_18.h"
 #include "Circle.h"
+#include "GLU_Object.h"
 #include "Model.h"
-#include "Rect.h"
-#include "Crane.h"
+
+
+
+
 
 enum Rotate_Type
 {
@@ -25,7 +28,6 @@ enum TTM
     Mode_Off,
 };
 
-
 Rotate_Type rtype;
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
@@ -42,7 +44,7 @@ void make_vertexShaders();
 void make_fragmentShaders();
 
 
-int window_x = 1200;
+int window_x = 800;
 int window_y = 800;
 
 
@@ -61,41 +63,22 @@ bool on_depth_test = true;
 bool on_culling = true;
 bool on_revolving = false;
 bool on_perspective = true;
+bool top_revolve = false;
+bool front_open = false;
+bool front_close = false;
+bool side_open = false;
+bool back_scale = false;
+bool on_light = true;
 
-float max_x = 3.f;
-float max_z = 3.f;
+TTM light_rot = Mode_Default;
+float light_theta = 0.f;
 
-TTM x_trs = Mode_Default;
-float b = 0.f;
-
-TTM y_rot = Mode_Default;
-float m_theta = 0.f;
-
-TTM leg_rot = Mode_Default;
-float leg_theta = 0.f;
-
-TTM leg_trs = Mode_Default;
-float leg_distance = 0.f;
-
-TTM cannon_rot = Mode_Default;
-float cannon_theta = 0.f;
-
-TTM cam_rot = Mode_Default;
-float cm_rot = 0.f;
-
-
-
-float thetax = 0.f;
-float thetay = 0.f;
-float thetaz = 0.f;
-
-
+float theta = 0.f;
 float xoffset = 0.f;
 float yoffset = 0.f;
 float zoffset = 0.f;
-float cm_xoffset = 0.f;
-float cm_yoffset = 0.f;
-float cm_zoffset = 0.f;
+
+float cube_zoffset = 3.f;
 
 GLuint vao1[4], vao2[3], vao3[3], vao4[3], vaol[2];
 GLuint vao[4];
@@ -108,14 +91,17 @@ GLuint VBO, EBO;
 
 mat4 rotateT = mat4(1.f);
 mat4 translatT = mat4(1.f);
+vec3 g_camerapos = vec3(0.f, 0.f, 0.f);
+TTM cam_rot = Mode_Default;
+float cm_rot = 0.f;
 
 
-
-
-Crane* crane;
-Rect_p rect;
-vector<class::Line*> Lines;
+Circle* pCircle;
 vector<class::Polygon*> vpolygons;
+vector<GLU_Object*> vglus;
+
+Cube* plight_cube;
+vector<class::Line*> Lines;
 
 glm::mat4 invertTranslation(const glm::mat4& matrix) {
     glm::mat4 invertedMatrix = matrix;
@@ -131,7 +117,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 100); // 윈도우의 위치 지정
 	glutInitWindowSize(window_x, window_y); // 윈도우의 크기 지정
-	int i = glutCreateWindow("Task_19"); // 윈도우 생성 (윈도우 이름)
+	int i = glutCreateWindow("Task_18"); // 윈도우 생성 (윈도우 이름)
 
 	// 윈도우 파괴
 	//void glutDestroyWindow(int winID);
@@ -149,7 +135,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	// void glutFullScreenToggle(void);
 	// 전체 화면으로 세팅 / 해제한다.
 
-	//--- GLEW 초기화하기
+		//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;	//OpenGl extensinon 정보를 가져올 수 있도록 설정
 	if (glewInit() != GLEW_OK) // glew(라이브러리) 초기화, 실패 시 에러출력
 	{
@@ -171,18 +157,20 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
     glutMouseFunc(Mouse);
 	make_shaderProgram();
 
-    crane = new Crane();
-    read_obj_file("cube.obj", crane->body);
-    read_obj_file("cube.obj", crane->cannon1);
-    read_obj_file("cube.obj", crane->cannon2);
-    read_obj_file("cube.obj", crane->frontLeg1);
-    read_obj_file("cube.obj", crane->frontLeg2);
-    read_obj_file("cube.obj", crane->head);
+
+
 
    
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    vpolygons.push_back(&rect);
- 
+    pCircle = new Circle(0.5, 100, shaderProgramID);
+    // glu 설정
+    for (int i = 0; i < 7; ++i)
+    {
+        vglus.emplace_back(new GLU_Object());
+    }
+    plight_cube = new Cube();
+    read_obj_file("Cube.obj", *plight_cube);
+
 	InitBuffer();
 	glLineWidth(2);
 	glPointSize(2);
@@ -191,6 +179,10 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	glEnable(GL_COLOR_MATERIAL);
 	//glEnable(GL_POLYGON_SMOOTH);
 	//glEnable(GL_LINE_SMOOTH);
+	
+	
+
+
 
 
 	// 윈도우 크기가 변경될 때 취할 동작 지정
@@ -204,6 +196,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설�
 	//void glutLeaveMainLoop(); - 이벤트 프로세싱(프로그램 종료)
 	//glutTimerFunc(10, UserTimerFunc, 1);
 }
+
 
 
 GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
@@ -222,9 +215,12 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 	//glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//--- 렌더링 파이프라인에 세이더 불러오기
+
 	glUseProgram(shaderProgramID);
 
+
     // 각 행렬 초기화
+    mat4 model = mat4(1.0f);
 	mat4 fundT = mat4(1.f);
     mat4 fRotT = mat4(1.f);
 	mat4 modelT = glm::mat4(1.0f);
@@ -237,31 +233,34 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
     float camX = sin(radians(cm_rot)) * radius;
     float camZ = cos(radians(cm_rot)) * radius;
     vec3 cameraPos = vec3(camX, 0.5f, camZ);  //--- 카메라 위치 EYE
-
+    g_camerapos = cameraPos;
 
     // 카메라 방향 (camerDir) 구하는 방법
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳 AT
     glm::vec3 cameraDir = glm::normalize(cameraPos - cameraTarget); //--- 카메라 방향 벡터: z축 양의 방향: 정규화(EYE - AT)
-   // cameraDir = glm::normalize(vec3(0.0f, cm_yoffset-0.1f, -1.0f));// 카메라가 바라보는 방향 (n)
-   
+    // cameraDir = glm::normalize(vec3(0.0f, cm_yoffset-0.1f, -1.0f));// 카메라가 바라보는 방향 (n)
+
    /* 위쪽 벡터와 카메라 방향 벡터와의 외적 = > camera right벡터를 구할 수 있음
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); = UP
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDir)); --- 카메라의 오른쪽 축(u)
-    glm::vec3 cameraUp = glm::cross(cameraDir,cameraRight); u x n = v*/ 
+    glm::vec3 cameraUp = glm::cross(cameraDir,cameraRight); u x n = v*/
     vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);// 카메라의 위쪽 축(v)
-	
+
     viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
     //glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
-    
 
     // =====================Projection transformation=====================
-   if(on_perspective == true)
-       projectionT = glm::perspective(glm::radians(45.0f), (float)window_x / (float)window_y, 0.1f, 100.0f);
-   else
-       projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f); 
+    if (on_perspective == true)
+        projectionT = glm::perspective(glm::radians(45.0f), (float)window_x / (float)window_y, 0.1f, 100.0f);
+    else
+        projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
 
     projectionT = glm::translate(projectionT, vec3(0.f, 0.f, -2.f));
-    
+
+    // 기본 회전
+    fRotT = glm::rotate(mat4(1.f), radians(90.f), vec3(1.f, 0.f, 0.f)); 
+
+
     // 행렬 위치 받아놓음
 	GLuint modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	GLuint viewLoc = glGetUniformLocation(shaderProgramID, "view");
@@ -269,79 +268,174 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
 
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
+
+    vec4 light_pos = vec4(0.f, 0.f, cube_zoffset, 1.f);
+    mat4 light_rot = glm::rotate(mat4(1.f), radians(light_theta), vec3(0.f, 1.f, 0.f));
+    vec4 fpos = light_rot * light_pos;
+    unsigned int lightPosLocation = glGetUniformLocation(shaderProgramID, "lightPos"); //--- lightPos 값 전달: (0.0, 0.0, 5.0);
+    glUniform3f(lightPosLocation, fpos.x, fpos.y, fpos.z);
 
 
-    glViewport(0, 0, 600, 600);
-    glBindVertexArray(VAO[0]);
-    if(vpolygons.size() > 0)
-        vpolygons[0]->Draw_Polygon();
+    unsigned int lightColorLocation = glGetUniformLocation(shaderProgramID, "lightColor"); //--- lightColor 값 전달: (1.0, 1.0, 1.0) 백색
+    if (on_light == true)
+        glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+    else
+        glUniform3f(lightColorLocation, 0.1, 0.1, 0.1);
 
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
-    // ================================================뷰 2================================================
-    // =====================Projection transformation=====================
-    cameraPos = vec3(0.f, 3.f, 0.f);  //--- 카메라 위치
-    cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳
-    cameraDir = glm::normalize(cameraPos - cameraTarget); //--- 카메라 방향 벡터: z축 양의 방향: 정규화(EYE - AT)
-    cameraUp = vec3(0.0f, 0.0f, -1.f);// 카메라 공간의 위쪽 축(v)
-    viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+    unsigned int objColorLocation = glGetUniformLocation(shaderProgramID, "objectColor"); //--- object Color값 전달: (1.0, 0.5, 0.3)의 색
+    glUniform3f(objColorLocation, 1.0, 0.2f, 0.3);
+    unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos"); //--- viewPos 값 전달: 카메라 위치
+    glUniform3f(viewPosLocation, g_camerapos.x, g_camerapos.y, g_camerapos.z);
 
-    projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-    projectionT = glm::translate(projectionT, vec3(0.f, 0.f, 0.f));
-
-    // 행렬 위치 받아놓음
-    modelLoc = glGetUniformLocation(shaderProgramID, "model");
-    viewLoc = glGetUniformLocation(shaderProgramID, "view");
-    projectionLoc = glGetUniformLocation(shaderProgramID, "projection");
-
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
-
-    glViewport(600, 400, 600, 400);
-    glBindVertexArray(VAO[0]);
-    if (!vpolygons.empty())
-        vpolygons[0]->Draw_Polygon();
-
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
-
-    // ================================================뷰 3================================================
-   // =====================Projection transformation=====================
-    cameraPos = vec3(0.f, 0.f, -3.f);  //--- 카메라 위치
-    cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); //--- 카메라가 바라보는 곳
-    cameraUp = vec3(0.0f, 1.0f, 0.f);// 카메라의 위쪽 축(v)
-    viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-
-    projectionT = glm::ortho(-2.f, 2.f, -2.f, 2.f, 0.1f, 100.f);
-    projectionT = glm::translate(projectionT, vec3(0.f, 0.f, 0.f));
-
-    // 행렬 위치 받아놓음
-    modelLoc = glGetUniformLocation(shaderProgramID, "model");
-    viewLoc = glGetUniformLocation(shaderProgramID, "view");
-    projectionLoc = glGetUniformLocation(shaderProgramID, "projection");
-
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewT));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionT));
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(fundT));
-
-    glViewport(600, 0, 600, 400);
-    glBindVertexArray(VAO[0]);
-    if (!vpolygons.empty())
-        vpolygons[0]->Draw_Polygon();
-
-    if (crane != nullptr)
-    {
-        crane->Draw(shaderProgramID);
-    }
+    plight_cube->_trs = glm::translate(mat4(1.f), vec3(0.f, 0.0f, cube_zoffset));
+    plight_cube->_rot = glm::rotate(mat4(1.f), radians(light_theta), vec3(0.f, 1.f, 0.f));
+    plight_cube->_scale = glm::scale(mat4(1.f), vec3(0.2f, 0.2f, 0.2f));
+    plight_cube->_FT = plight_cube->_rot * plight_cube->_trs * plight_cube->_scale * model;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(plight_cube->_FT));
+    plight_cube->Draw(shaderProgramID);
 
 
+    vec4 cur_center = glm::vec4{ 1.f };
+    // glu 관련 ===============
+    // 변환 행렬 설정
+    // ===========중앙 행성================
+    vglus[0]->setTranslation(glm::vec3(xoffset, yoffset, zoffset));
+    //vglus[0]->setRotation(0.f, glm::vec3(0.f, 0.f, 0.f));
+    vglus[0]->setScale(glm::vec3(1.f, 1.f, 1.f));
+    vglus[0]->setFT();
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(vglus[0]->getFT()));
+    vglus[0]->draw(GLU_FILL);
 
+    // 원 그리기
+    mat4 CircleT = glm::mat4(1.0f);
+    mat4 roty = glm::rotate(mat4(1.f), glm::radians(theta), glm::vec3(0.0f, 1.0f, 0.0f));
+  
+   
+  /*  CircleT = glm::scale(CircleT, glm::vec3(3.f));
+    CircleT = fRotT * CircleT;
+    CircleT = glm::translate(mat4(1.f), vec3(xoffset, yoffset, zoffset)) * CircleT;
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[0]->getCircle()->draw();
+
+    CircleT = glm::rotate(CircleT, glm::radians(45.f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[0]->getCircle()->draw();
+
+    CircleT = glm::rotate(CircleT, glm::radians(-90.f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[0]->getCircle()->draw();*/
+
+    // ============공전 행성1================(중간)
+    vglus[1]->setTranslation(glm::vec3(1.5f+xoffset, yoffset, zoffset));
+    vglus[1]->setScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    vglus[1]->setFT();
+    CircleT = roty * vglus[1]->getFT();
+
+    vglus[1]->setCenter(roty * vglus[1]->getCenter());
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[1]->draw(GLU_FILL);
+
+    //// 원 그리기
+    //CircleT = glm::mat4(1.0f);
+    //CircleT = fRotT * CircleT;
+    //CircleT = vglus[1]->getTranslation() * CircleT;
+    //CircleT = roty * CircleT;
+    //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    //vglus[1]->getCircle()->draw();
+
+    // 위성 그리기
+    vglus[2]->setTranslation(glm::vec3(1.5f + xoffset, yoffset, zoffset));
+    vglus[2]->setScale(glm::vec3(0.25f, 0.25f, 0.25f));
+    vglus[2]->setFT();
+    CircleT = glm::translate(mat4(1.f), glm::vec3(-0.5f, 0.f, 0.f)) * vglus[2]->getFT();
+    CircleT = roty * CircleT;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+   
+    vglus[2]->draw(GLU_FILL);
+
+    // ============공전 행성2================(RT)
+    vglus[3]->setTranslation(glm::vec3(1.5f + xoffset, yoffset, zoffset));
+    vglus[3]->setScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    vglus[3]->setFT();
+    cur_center = vglus[3]->getCenter();
+    CircleT = glm::rotate(mat4(1.f), glm::radians(45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * vglus[3]->getFT();   
+    cur_center = glm::rotate(mat4(1.f), glm::radians(45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * cur_center;
+    CircleT = glm::rotate(mat4(1.f),glm::radians(theta),vec3(1.f,-1.f,0.f)) * CircleT;
+    cur_center = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, -1.f, 0.f)) * cur_center;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[3]->draw(GLU_FILL);
+
+    //// 원 그리기
+    //CircleT = glm::mat4(1.0f);
+    //CircleT = fRotT * CircleT;
+    //CircleT = glm::translate(mat4(1.f), vec3(cur_center.x,cur_center.y,cur_center.z)) * CircleT;
+    
+   ///* CircleT = glm::rotate(mat4(1.f), glm::radians(theta / 2 - 45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * CircleT;
+   // CircleT = vglus[3]->getTranslation() * CircleT;
+   // CircleT = glm::rotate(mat4(1.f), glm::radians(45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * CircleT;
+   // CircleT = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, -1.f, 0.f)) * CircleT;
+   // CircleT = glm::rotate(mat4(1.f), glm::radians(-45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * CircleT;*/
+   // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+   // vglus[3]->getCircle()->draw();
+
+
+
+  
+    // 위성 그리기
+    vglus[4]->setTranslation(glm::vec3(1.5f + xoffset, yoffset, zoffset));
+    vglus[4]->setScale(glm::vec3(0.25f, 0.25f, 0.25f));
+    vglus[4]->setFT();
+
+    
+    CircleT = glm::rotate(mat4(1.f), glm::radians(45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * vglus[4]->getFT();
+    
+    CircleT = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, -1.f, 0.f)) * CircleT;
+    CircleT = glm::translate(mat4(1.f), glm::vec3(-0.5f, 0.f, 0.f)) * CircleT;
+    
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    
+    vglus[4]->draw(GLU_FILL);
+
+    // ============공전 행성3================(LT)
+    vglus[5]->setTranslation(glm::vec3(-1.5f + xoffset, yoffset, zoffset));
+    vglus[5]->setScale(glm::vec3(0.5f, 0.5f, 0.5f));
+    vglus[5]->setFT();
+    cur_center = vglus[5]->getCenter();
+
+    CircleT = glm::rotate(mat4(1.f), glm::radians(-45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * vglus[5]->getFT();
+    cur_center = glm::rotate(mat4(1.f), glm::radians(-45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * cur_center;
+    
+    CircleT = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, 1.f, 0.f)) * CircleT;
+    cur_center = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, 1.f, 0.f)) * cur_center;
+    
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[5]->draw(GLU_FILL);
+
+  //  // 원 그리기
+  //  CircleT = glm::mat4(1.0f);
+  //  CircleT = fRotT * CircleT;
+  //  CircleT = glm::translate(mat4(1.f), vec3(cur_center.x, cur_center.y, cur_center.z)) * CircleT;
+  ///*  CircleT = glm::rotate(mat4(1.f), glm::radians(theta / 2 + 45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * CircleT;
+  //  CircleT = vglus[5]->getTranslation() * CircleT;
+  //  CircleT = glm::rotate(mat4(1.f), glm::radians(-45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * CircleT;
+  //  CircleT = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, 1.f, 0.f)) * CircleT;*/
+  //  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+  //  vglus[5]->getCircle()->draw();
+
+    // 위성 그리기
+    vglus[6]->setTranslation(glm::vec3(-1.5f + xoffset, yoffset, zoffset));
+    vglus[6]->setScale(glm::vec3(0.25f, 0.25f, 0.25f));
+    vglus[6]->setFT();
+
+    CircleT = glm::rotate(mat4(1.f), glm::radians(-45.f), glm::vec3(0.0f, 0.0f, 1.0f)) * vglus[6]->getFT();
+    CircleT = glm::rotate(mat4(1.f), glm::radians(theta), vec3(1.f, 1.f, 0.f)) * CircleT;
+    CircleT = glm::translate(mat4(1.f), glm::vec3(-0.5f, 0.f, 0.f)) * CircleT;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(CircleT));
+    vglus[6]->draw(GLU_FILL);
+  
+  
+ 
     glutSwapBuffers(); //--- 화면에 출력하기
 }
 
@@ -352,10 +446,13 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 	window_y = h;
 }
 
+
 int make_line_size = 1;
 
 GLvoid Mouse(int button, int state, int x, int y)
 {
+
+
 	if (on_mouse == false)
 		return;
 
@@ -390,216 +487,42 @@ GLvoid Mouse(int button, int state, int x, int y)
 }
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
+   
+    if (key != 'h' &&
+        key != 't' &&
+        key != 'f' &&
+        key != 'y' &&
+        key != 's' &&
+        key != 'b' &&
+        key != 'o' &&
+        key != 'r' &&
+        key != 'p')
+        return;
+
+    rtype = Rotate_none;
+    rotateT = mat4(1.f);
+    top_revolve = false;
+    front_open = false;
+    side_open = false;
+    back_scale = false;
+   
     switch (key)
     {
-    case 'z':
-        cm_zoffset += 0.1f;
-        break;
-    case 'Z':
-        cm_zoffset -= 0.1f;
-        break;
-    case 'x':
-        cm_xoffset += 0.1f;
-        break;
-    case 'X':
-        cm_xoffset -= 0.1f;
-        break;
-    case 'y':
-        cm_yoffset += 0.1f;
-        break;
-    case 'Y':
-        cm_yoffset -= 0.1f;
-        break;
     case 'r':
-        cm_rot += 1.f;
-        break;
-    case 'R':
-        cm_rot -= 1.f;
-        break;
-    case 'a':
-        if (cam_rot == Mode_On)
+        if (light_rot == Mode_On)
         {
-            cam_rot = Mode_Default;
+            light_rot = Mode_Default;
             on_timer = false;
         }
         else
         {
-            cam_rot = Mode_On;
+            light_rot = Mode_On;
             on_timer = true;
             glutTimerFunc(10, UserTimerFunc, 1);
         }
         break;
-    case 'A':
-        if (cam_rot == Mode_Off)
-        {
-            cam_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            cam_rot = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'b':
-        if (x_trs == Mode_On)
-        {
-            x_trs = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            x_trs = Mode_On;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'B':
-        if (x_trs == Mode_Off)
-        {
-            x_trs = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            x_trs = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'm':
-        if (y_rot == Mode_On)
-        {
-            y_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            y_rot = Mode_On;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'M':
-        if (y_rot == Mode_Off)
-        {
-            y_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            y_rot = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'f':
-        if (leg_rot == Mode_On)
-        {
-            leg_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            leg_rot = Mode_On;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'F':
-        if (leg_rot == Mode_Off)
-        {
-            leg_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            leg_rot = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'e':
-        if (leg_trs == Mode_On)
-        {
-            leg_trs = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            leg_trs = Mode_On;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'E':
-        if (leg_trs == Mode_Off)
-        {
-            leg_trs = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            leg_trs = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 't':
-        if (cannon_rot == Mode_On)
-        {
-            cannon_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            cannon_rot = Mode_On;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-    case 'T':
-        if (cannon_rot == Mode_Off)
-        {
-            cannon_rot = Mode_Default;
-            on_timer = false;
-        }
-        else
-        {
-            cannon_rot = Mode_Off;
-            on_timer = true;
-            glutTimerFunc(10, UserTimerFunc, 1);
-        }
-        break;
-
-    case 's':
-        on_timer = false;
-        break;
-    case 'S':
-        on_timer = true;
-        break;
-    case 'c':
-        x_trs = Mode_Default;
-        b = 0.f;
-
-        y_rot = Mode_Default;
-        m_theta = 0.f;
-
-        leg_rot = Mode_Default;
-        leg_theta = 0.f;
-
-        leg_trs = Mode_Default;
-        leg_distance = 0.f;
-
-        cannon_rot = Mode_Default;
-        cannon_theta = 0.f;
-
-        on_timer = false;
-        break;
-    case 'q':
-        glutLeaveMainLoop();
     }
+
 	InitBuffer();
 	glutPostRedisplay(); //--- 배경색이 바뀔 때마다 출력 콜백 함수를 호출하여 화면을 refresh 한다
 }
@@ -607,6 +530,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 GLvoid sp_Keyboard(int key, int x, int y)
 {
 }
+
+
 
 void InitBuffer()
 {
@@ -618,7 +543,7 @@ void InitBuffer()
 	}
 
 	glGenVertexArrays(10, VAO);
-	glGenBuffers(10, vbo);
+	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 
 	/*여러 다각형이 그려지지 않는 이유는
@@ -635,12 +560,15 @@ void InitBuffer()
 		glBindVertexArray(VAO[i]); //--- VAO를 바인드하기
 		vpolygons[i]->init_buffer_polygon(VAO, vbo);
 	}
+    if (plight_cube != nullptr)
+        plight_cube->model_init_buffer();
+ 
 
-    if (crane != nullptr)
-    {
-        crane->init_buffer();
-    }
+    
+
+  
 }
+
 
 void make_shaderProgram()
 {
@@ -763,131 +691,28 @@ int check_quad(float xpos, float ypos)
 
 void UserTimerFunc(int value)
 {
-    if (x_trs == Mode_On)
+    if (light_rot == Mode_On)
     {
-        b += 0.1f;
-        if (b >= max_x)
+        light_theta += 1.f;
+        if (light_theta >= 360.f)
         {
-            b = max_x;
-            x_trs = Mode_Default;
-            on_timer = false;
-
-        }
-    }
-    else if (x_trs == Mode_Off)
-    {
-        b -= 0.1f;
-        if (b <= -max_x)
-        {
-            b = -max_x;
-            x_trs = Mode_Default;
-            on_timer = false;
-
-        }
-    }
-    if (y_rot == Mode_On)
-    {
-        m_theta += 1.f;
-        if (m_theta >= 360.f)
-        {
-            m_theta = 0.f;
-            y_rot = Mode_Default;
+            light_theta = 0.f;
+            light_rot = Mode_Default;
             on_timer = false;
         }
     }
-    else if (y_rot == Mode_Off)
+    else if (light_rot == Mode_Off)
     {
-        m_theta -= 1.f;
-        if (m_theta <= -360.f)
+        light_theta -= 1.f;
+        if (light_theta <= -360.f)
         {
-            m_theta = 0.f;
-            y_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
-    if (leg_rot == Mode_On)
-    {
-        leg_theta += 1.f;
-        if (leg_theta >= 360.f)
-        {
-            leg_theta = 0.f;
-            leg_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
-    else if (leg_rot == Mode_Off)
-    {
-        leg_theta -= 1.f;
-        if (leg_theta <= -360.f)
-        {
-            leg_theta = 0.f;
-            leg_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
-    
-
-    if (leg_trs == Mode_On && leg_theta == 0.f)
-    {
-        leg_distance += 0.1f;
-        if (leg_distance >= 0.75f - 0.1f)
-        {
-            leg_distance = 0.75f - 0.1f;
-            leg_trs = Mode_Default;
-            on_timer = false;
-        }
-    }
-    else if (leg_trs == Mode_Off && leg_theta == 0.f)
-    {
-        leg_distance -= 0.1f;
-        if (leg_distance <= 0.f)
-        {
-            leg_distance = 0.f;
-            leg_trs = Mode_Default;
-            on_timer = false;
-        }
-    }
-    if (cannon_rot == Mode_On)
-    {
-        cannon_theta += 1.f;
-        if (cannon_theta >= 90.f)
-        {
-            cannon_theta = 90.f;
-            cannon_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
-    else if (cannon_rot == Mode_Off)
-    {
-        cannon_theta -= 1.f;
-        if (cannon_theta <= 0)
-        {
-            cannon_theta = 0.f;
-            cannon_rot = Mode_Default;
+            light_theta = 0.f;
+            light_rot = Mode_Default;
             on_timer = false;
         }
     }
 
-    if (cam_rot == Mode_On)
-    {
-        cm_rot += 1.f;
-        if (cm_rot >= 360.f)
-        {
-            cm_rot = 0.f;
-            cam_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
-    else if (cam_rot == Mode_Off)
-    {
-        cm_rot -= 1.f;
-        if (cm_rot <= -360.f)
-        {
-            cm_rot = 0.f;
-            cam_rot = Mode_Default;
-            on_timer = false;
-        }
-    }
+
     InitBuffer();
 	glutPostRedisplay();
 	if (on_timer)
