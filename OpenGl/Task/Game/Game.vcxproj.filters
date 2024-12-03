@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\Map">
+      <UniqueIdentifier>{ff33e782-18b2-4e61-ac24-3bb8c9e1d147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Model">
+      <UniqueIdentifier>{ea1aeba4-6711-4564-aeb6-d2c10e3bb4df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Model\Player">
+      <UniqueIdentifier>{b4005c23-93be-4eb9-912e-a65ef00b9de0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Model\Monster">
+      <UniqueIdentifier>{cdad7b53-0af9-44be-8167-d9e92386d2e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Shader">
+      <UniqueIdentifier>{d0ebc954-7b24-48dc-80df-2674523209a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\GLU">
+      <UniqueIdentifier>{26f78327-dfcc-435d-939d-3a8657dbbdc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Polygon">
+      <UniqueIdentifier>{9ff682b9-8707-4fb9-8aac-191859cf5340}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Circle">
+      <UniqueIdentifier>{3c617246-8762-4995-bb14-9b17930cbbfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\OBJ">
+      <UniqueIdentifier>{e490074a-245e-4afd-be26-812fe5c7dc01}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>소스 파일\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Line_18.cpp">
+      <Filter>소스 파일\Polygon</Filter>
+    </ClCompile>
+    <ClCompile Include="Polygon_18.cpp">
+      <Filter>소스 파일\Polygon</Filter>
+    </ClCompile>
+    <ClCompile Include="GLU_Object.cpp">
+      <Filter>소스 파일\GLU</Filter>
+    </ClCompile>
+    <ClCompile Include="Circle.cpp">
+      <Filter>소스 파일\Circle</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="component_18.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>소스 파일\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Line_18.h">
+      <Filter>소스 파일\Polygon</Filter>
+    </ClInclude>
+    <ClInclude Include="Polygon_18.h">
+      <Filter>소스 파일\GLU</Filter>
+    </ClInclude>
+    <ClInclude Include="GLU_Object.h">
+      <Filter>소스 파일\GLU</Filter>
+    </ClInclude>
+    <ClInclude Include="Circle.h">
+      <Filter>소스 파일\Circle</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragment.glsl">
+      <Filter>소스 파일\Shader</Filter>
+    </None>
+    <None Include="vertex.glsl">
+      <Filter>소스 파일\Shader</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="cube.obj">
+      <Filter>소스 파일\OBJ</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

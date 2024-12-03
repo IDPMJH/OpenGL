@@ -243,7 +243,7 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수 {
    /* 위쪽 벡터와 카메라 방향 벡터와의 외적 = > camera right벡터를 구할 수 있음
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); = UP
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDir)); --- 카메라의 오른쪽 축(u)
-    glm::vec3 cameraUp = glm::cross(cameraDir,cameraRight); u x n = v*/
+    glm::vec3 cameraUp = glm::cross(cameraDir,cameraRight); n x u = v*/
     vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);// 카메라의 위쪽 축(v)
 
     viewT = glm::lookAt(cameraPos, cameraTarget, cameraUp);
